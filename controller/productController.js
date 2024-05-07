@@ -1,13 +1,21 @@
 const productModel = require("../models/productModel");
-
 const createProduct = async (req, res) => {
   try {
     const info = req.body;
-    const category = await productModel.create(info);
+    const { files } = req;
+    const fieldname = await uploadFile(files[0]);
+    const product = await productModel.create({
+      name: info.name,
+      description: info.description,
+      price: info.price,
+      quantity: info.quantity,
+      category: info.category,
+      image_id: fieldname,
+    });
     res.status(201).json({
       success: true,
       message: "Product succesfully created",
-      category,
+      product,
     });
   } catch (err) {
     console.log(err);

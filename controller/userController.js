@@ -1,7 +1,10 @@
+// @ts-check
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/user.js");
+const { createAddress } = require("../utils/address.utils.js");
+const { default: mongoose } = require("mongoose");
 
 // bcrypt.genSalt(10,(err,salt)=>{
 //   if (!err){
@@ -28,6 +31,40 @@ const createUser = async (req, res) => {
     const createData = await User.create(data);
     console.log(createData);
     return res.status(201).json({ success: true, data: createData });
+  } catch (err) {
+    return res.status(500).json({ success: err.message, stack: err.stack });
+  }
+};
+
+const addNewAddress = async (req, res) => {
+  // add new address
+  try {
+    const { address, _id } = req.body;
+    console.log(address, _id);
+    const existingUser = await User.findById(new mongoose.Types.ObjectId(_id));
+    if (!existingUser) return res.json("User does not exist");
+    const addressResponse = await createAddress({ user_id: _id, ...address });
+    if (!addressResponse.success)
+      return res.status(400).json({ message: "Error creating address" });
+    existingUser.address.push(addressResponse._id);
+    await existingUser.save();
+    return res.status(201).json({ success: true, data: existingUser });
+  } catch (err) {
+    return res.status(500).json({ success: err.message, stack: err.stack });
+  }
+};
+
+const getAddressByUserId = async (req, res) => {
+  // get address by user id
+  try {
+    const { _id } = req.body;
+    const addressResponse = await User.findById(
+      new mongoose.Types.ObjectId(_id)
+    ).populate("address");
+    if (!addressResponse) {
+      return res.status(400).json({ message: "User does not exist" });
+    }
+    return res.status(201).json({ success: true, data: addressResponse });
   } catch (err) {
     return res.status(500).json({ success: err.message, stack: err.stack });
   }
@@ -65,6 +102,8 @@ const getUser = async (req, res) => {
 };
 module.exports = {
   createUser,
+  addNewAddress,
+  getAddressByUserId,
   getUser,
   loginUser,
 };

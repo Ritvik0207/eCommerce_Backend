@@ -1,20 +1,26 @@
 const express = require("express");
 const connect = require("./DB/mongoose");
-const userRoute = require("./router/user.routes");
-const categoryRoute = require("./router/category.routes");
-const productRoute = require("./router/product.routes");
-const productVariantRoute = require("./router/productVariant.routes");
-const wishlist = require("./router/wishlist.routes");
-const cardList = require("./router/cart.routes");
+const userRoutes = require("./router/user.routes");
+const categoryRoutes = require("./router/category.routes");
+const productRoutes = require("./router/product.routes");
+const productVariantRoutes = require("./router/productVariant.routes");
+const wishlistRoutes = require("./router/wishlist.routes");
+const cardListRoutes = require("./router/cart.routes");
+const orderProductRoutes = require("./router/order.routes");
+const addressRoutes = require("./router/address.routes");
+
 const app = express();
 
 app.use(express.json());
-app.use("/user", userRoute);
-app.use("/category", categoryRoute);
-app.use("/product", productRoute);
-app.use("/productVariant", productVariantRoute);
-app.use("/wishlist", wishlist);
-app.use("/cart", cardList);
+app.use(express.urlencoded({ extended: true }));
+app.use("/user", userRoutes);
+app.use("/category", categoryRoutes);
+app.use("/product", productRoutes);
+app.use("/productVariant", productVariantRoutes);
+app.use("/wishlist", wishlistRoutes);
+app.use("/cart", cardListRoutes);
+app.use("/order", orderProductRoutes);
+// app.use("/address", addressRoutes);
 connect();
 
 app.listen(3000, () => {

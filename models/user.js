@@ -17,6 +17,14 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, "Password is compulsory to fill up"],
   },
+  address: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Address",
+      default_selected: Boolean,
+      required: false,
+    },
+  ],
 });
 
 const userModel = mongoose.model("users", userSchema);

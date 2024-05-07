@@ -19,7 +19,7 @@ const productVariantSchema = mongoose.Schema({
     required: true,
   },
   product: {
-    type: mongoose.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "product",
     required: true,
   },

@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 const productSchema = mongoose.Schema({
+  image_id: {
+    type: String,
+    required: true,
+  },
   name: {
     type: String,
     required: [true, "name is compulsory to fill up"],
@@ -17,7 +21,7 @@ const productSchema = mongoose.Schema({
     required: true,
   },
   category: {
-    type: mongoose.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "category",
     required: true,
   },
