@@ -8,6 +8,7 @@ const wishlistRoutes = require("./router/wishlist.routes");
 const cardListRoutes = require("./router/cart.routes");
 const orderProductRoutes = require("./router/order.routes");
 const addressRoutes = require("./router/address.routes");
+const carouselRoutes = require("./router/carousel.routes");
 const cors = require("cors");
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/productVariant", productVariantRoutes);
 app.use("/wishlist", wishlistRoutes);
 app.use("/cart", cardListRoutes);
 app.use("/order", orderProductRoutes);
+app.use("/carousel", carouselRoutes);
 // app.use("/address", addressRoutes);
 connect();
 

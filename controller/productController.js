@@ -1,4 +1,5 @@
 const productModel = require("../models/productModel");
+const { uploadFile } = require("../upload/upload");
 const createProduct = async (req, res) => {
   try {
     const info = req.body;
