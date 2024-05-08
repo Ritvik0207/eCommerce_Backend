@@ -8,8 +8,10 @@ const wishlistRoutes = require("./router/wishlist.routes");
 const cardListRoutes = require("./router/cart.routes");
 const orderProductRoutes = require("./router/order.routes");
 const addressRoutes = require("./router/address.routes");
-
+const cors = require("cors");
 const app = express();
+
+app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
