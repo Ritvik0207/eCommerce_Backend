@@ -9,6 +9,7 @@ const cardListRoutes = require("./router/cart.routes");
 const orderProductRoutes = require("./router/order.routes");
 const addressRoutes = require("./router/address.routes");
 const carouselRoutes = require("./router/carousel.routes");
+const contactRoutes = require("./router/contact.routes");
 const cors = require("cors");
 const app = express();
 
@@ -17,6 +18,7 @@ app.get("/", (req, res) => {
   res.send("Server is running");
 });
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 app.use("/user", userRoutes);
 app.use("/category", categoryRoutes);
@@ -26,6 +28,7 @@ app.use("/wishlist", wishlistRoutes);
 app.use("/cart", cardListRoutes);
 app.use("/order", orderProductRoutes);
 app.use("/carousel", carouselRoutes);
+app.use("/contact", contactRoutes);
 // app.use("/address", addressRoutes);
 connect();
 

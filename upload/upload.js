@@ -39,6 +39,7 @@ const uploadFile = async (fileObject) => {
       },
       fields: "id,name",
     });
+
   return data.id;
 };
 module.exports = { uploadFile };

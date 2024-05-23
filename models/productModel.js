@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 const productSchema = mongoose.Schema({
-  image_id: {
-    type: String,
-    required: true,
-  },
+  image_id: [
+    {
+      type: String,
+      required: true,
+    },
+  ],
   name: {
     type: String,
     required: [true, "name is compulsory to fill up"],
@@ -14,6 +16,14 @@ const productSchema = mongoose.Schema({
   },
   price: {
     type: Number,
+    required: true,
+  },
+  sizelength: {
+    type: String,
+    required: true,
+  },
+  sizewidth: {
+    type: String,
     required: true,
   },
   quantity: {
