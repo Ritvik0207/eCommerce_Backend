@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const cartModel = require("../models/cartModel");
 const createCart = async (req, res) => {
   try {
@@ -39,7 +40,27 @@ const cartList = async (req, res) => {
     });
   }
 };
+const getCartByUserId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cart = await cartModel.find({
+      user_id: new mongoose.Types.ObjectId(id),
+    });
+    res.status(200).json({
+      success: true,
+      message: "Cart succesfully fetch",
+      cart,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 module.exports = {
   createCart,
   cartList,
+  getCartByUserId,
 };

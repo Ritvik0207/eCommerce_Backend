@@ -10,7 +10,7 @@ const route = express.Router();
 const multer = require("multer");
 const upload = multer();
 //category router
-route.post("/create", upload.any(), createProduct);
+route.post("/create", upload.array("images"), createProduct);
 route.get("/allproduct", getAllProduct);
 route.put("/update/:id", updateProduct);
 route.delete("/delete/:id", deleteProduct);

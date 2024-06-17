@@ -4,8 +4,10 @@ const createProduct = async (req, res) => {
   try {
     const info = req.body;
     const { files } = req;
+    // console.log(files);
     const fieldname = new Array();
-    for (const file in files) {
+    for (const file of files) {
+      console.log(file);
       const fileId = await uploadFile(file);
       fieldname.push(fileId);
     }
