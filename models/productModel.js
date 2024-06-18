@@ -35,6 +35,11 @@ const productSchema = mongoose.Schema({
     ref: "category",
     required: true,
   },
+  types: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "productTypes",
+    required: true,
+  },
 });
 
 const productModel = mongoose.model("product", productSchema);
