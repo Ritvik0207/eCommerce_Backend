@@ -66,7 +66,10 @@ const getAllProduct = async (req, res) => {
       : {};
 
     // Find products matching the query and populate the category field
-    const products = await productModel.find(query).populate("category");
+    const products = await productModel
+      .find(query)
+      .populate("category")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
