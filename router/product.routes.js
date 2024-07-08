@@ -8,6 +8,7 @@ const {
   createProductTypes,
   getProductTypes,
   getProductByCategoryId,
+  updateProductFav,
 } = require("../controller/productController");
 const route = express.Router();
 const multer = require("multer");
@@ -16,6 +17,7 @@ const upload = multer();
 route.post("/create", upload.array("images"), createProduct);
 route.get("/allproduct", getAllProduct);
 route.put("/update/:id", updateProduct);
+route.put("/updatefav/:id", updateProductFav);
 route.delete("/delete/:id", deleteProduct);
 route.get("/getOneProduct/:id", getProductById);
 route.get("/query", getProductById);

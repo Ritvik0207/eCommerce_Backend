@@ -35,6 +35,11 @@ const productSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
+    fav: {
+      type: String,
+      default: "No",
+      enum: ["Yes", "No"],
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "category",

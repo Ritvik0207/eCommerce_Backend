@@ -111,6 +111,31 @@ const updateProduct = async (req, res) => {
     });
   }
 };
+const updateProductFav = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { fav } = req.body;
+    console.log(fav);
+    const update = await productModel.findByIdAndUpdate(
+      id,
+      { fav },
+      {
+        new: true,
+      }
+    );
+    res.status(201).json({
+      success: true,
+      message: "Item added to wistlist",
+      update,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
 const deleteProduct = async (req, res) => {
   try {
@@ -210,6 +235,7 @@ module.exports = {
   createProduct,
   getAllProduct,
   updateProduct,
+  updateProductFav,
   deleteProduct,
   getProductById,
   createProductTypes,
