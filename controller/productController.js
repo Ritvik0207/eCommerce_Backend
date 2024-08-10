@@ -1,12 +1,13 @@
 const productModel = require("../models/productModel");
 const productTypesModel = require("../models/productTypesModel");
 const { uploadFile } = require("../upload/upload");
+
 const createProduct = async (req, res) => {
   try {
     const info = req.body;
     const { files } = req;
-    // console.log(files);
-    const fieldname = new Array();
+    console.log("test", files, info);
+    const fieldname = [];
     for (const file of files) {
       console.log(file);
       const fileId = await uploadFile(file);
@@ -16,6 +17,7 @@ const createProduct = async (req, res) => {
       name: info.name,
       description: info.description,
       price: info.price,
+      discount: info.discount,
       quantity: info.quantity,
       sizelength: info.sizelength,
       sizewidth: info.sizewidth,
@@ -27,6 +29,28 @@ const createProduct = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Product succesfully created",
+      product,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+const filterByPrice = async (req, res) => {
+  try {
+    const { new_price } = req.query;
+    const lowerPrice = Number.parseInt(new_price.split("-")[0]);
+    const upperPrice = Number.parseInt(new_price.split("-")[1]);
+    const product = await productModel
+      .find({ price: { $gte: lowerPrice, $lte: upperPrice } })
+      .populate("category");
+    res.status(200).json({
+      success: true,
+      message: "Products successfully fetched",
       product,
     });
   } catch (err) {
@@ -233,6 +257,7 @@ const getProductByCategoryId = async (req, res) => {
 
 module.exports = {
   createProduct,
+  filterByPrice,
   getAllProduct,
   updateProduct,
   updateProductFav,

@@ -9,12 +9,15 @@ const {
   getProductTypes,
   getProductByCategoryId,
   updateProductFav,
+  filterByPrice,
 } = require("../controller/productController");
-const route = express.Router();
 const multer = require("multer");
+
+const route = express.Router();
 const upload = multer();
 //category router
 route.post("/create", upload.array("images"), createProduct);
+route.post("/filterbyprice", filterByPrice);
 route.get("/allproduct", getAllProduct);
 route.put("/update/:id", updateProduct);
 route.put("/updatefav/:id", updateProductFav);

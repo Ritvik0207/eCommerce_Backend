@@ -15,13 +15,12 @@ const productSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    new_price: {
+    price: {
       type: Number,
       required: true,
     },
-    old_price: {
+    discount: {
       type: Number,
-      required: true,
     },
     sizelength: {
       type: String,
