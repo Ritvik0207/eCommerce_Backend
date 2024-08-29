@@ -10,6 +10,7 @@ const orderProductRoutes = require("./router/order.routes");
 const addressRoutes = require("./router/address.routes");
 const carouselRoutes = require("./router/carousel.routes");
 const contactRoutes = require("./router/contact.routes");
+const subCategoryRoutes = require("./router/address.routes");
 const cors = require("cors");
 const Razorpay = require("razorpay");
 const crypto = require("node:crypto");
@@ -77,6 +78,7 @@ app.use("/cart", cardListRoutes);
 app.use("/order", orderProductRoutes);
 app.use("/carousel", carouselRoutes);
 app.use("/contact", contactRoutes);
+app.use("/subCategory", subCategoryRoutes);
 // app.use("/address", addressRoutes);
 connect();
 

@@ -1,6 +1,7 @@
 const productModel = require("../models/productModel");
 const productTypesModel = require("../models/productTypesModel");
 const { uploadFile } = require("../upload/upload");
+const categoryModel = require("../models/categoryModel");
 
 const createProduct = async (req, res) => {
   try {
@@ -42,25 +43,54 @@ const createProduct = async (req, res) => {
 
 const filterByPrice = async (req, res) => {
   try {
-    const { new_price } = req.query;
-    const lowerPrice = Number.parseInt(new_price.split("-")[0]);
-    const upperPrice = Number.parseInt(new_price.split("-")[1]);
-    const product = await productModel
-      .find({ price: { $gte: lowerPrice, $lte: upperPrice } })
+    const { new_price = "", category = "" } = req.params;
+
+    const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+    const priceRange = new_price.split("-");
+    if (priceRange.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid price range format.",
+      });
+    }
+
+    const lowerPrice = Number.parseInt(priceRange[0], 10);
+    const upperPrice = Number.parseInt(priceRange[1], 10);
+
+    const categoryProduct = await categoryModel.findOne({ name: newCategory });
+    if (!categoryProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found.",
+      });
+    }
+
+    console.log("Category Product:", categoryProduct);
+
+    const products = await productModel
+      .find({
+        category: categoryProduct._id,
+        new_price: { $gte: lowerPrice, $lte: upperPrice },
+      })
       .populate("category");
+
+    console.log("Products:", products);
+
     res.status(200).json({
       success: true,
       message: "Products successfully fetched",
-      product,
+      products,
     });
   } catch (err) {
-    console.log(err);
+    console.error("Error occurred in filterByPrice:", err);
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: "An error occurred while fetching products.",
     });
   }
 };
+
 // const getAllProduct = async (req, res) => {
 //   try {
 //     const product = await productModel.find().populate("category");
@@ -239,8 +269,18 @@ const getProductTypes = async (req, res) => {
 };
 const getProductByCategoryId = async (req, res) => {
   try {
-    const { id } = req.params;
-    const product = await productModel.find({ category: id });
+    const { name } = req.query;
+    console.log(req.params);
+    const decodedName = decodeURIComponent(name); // Decode the name parameter
+
+    //Rani-Phee
+    const category = await categoryModel.findOne({ name: name });
+    //{ name:"rani-phee", _id:"lsjfsd"}
+    const product = await productModel.find({ category: category._id });
+    console.log(decodedName);
+    console.log(category);
+    console.log(product);
+
     res.status(200).json({
       success: true,
       message: "Product category succesfully fetch",

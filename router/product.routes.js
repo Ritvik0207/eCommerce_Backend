@@ -17,7 +17,7 @@ const route = express.Router();
 const upload = multer();
 //category router
 route.post("/create", upload.array("images"), createProduct);
-route.post("/filterbyprice", filterByPrice);
+route.get("/filterbyprice/:category/:new_price", filterByPrice);
 route.get("/allproduct", getAllProduct);
 route.put("/update/:id", updateProduct);
 route.put("/updatefav/:id", updateProductFav);
@@ -26,7 +26,7 @@ route.get("/getOneProduct/:id", getProductById);
 route.get("/query", getProductById);
 route.post("/createProductType", createProductTypes);
 route.get("/getproductType/:types", getProductTypes);
-route.get("/getProductCategoryById/:id", getProductByCategoryId);
+route.get("/getProductCategoryById", getProductByCategoryId);
 // route.delete("/delete/:id", deleteCategory);
 // route.put("/update/:id", updateCategory);
 module.exports = route;
