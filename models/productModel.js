@@ -21,6 +21,7 @@ const productSchema = mongoose.Schema(
     },
     discount: {
       type: Number,
+      default: 0,
     },
     sizelength: {
       type: String,
@@ -34,11 +35,20 @@ const productSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
-    fav: {
-      type: String,
-      default: "No",
-      enum: ["Yes", "No"],
+    isProductForKids: {
+      type: Boolean,
+      default: false,
     },
+    sex: {
+      type: String,
+      enum: ["Male", "Female", "Neutral"],
+      required: true,
+    },
+    // fav: {
+    //   type: String,
+    //   default: "No",
+    //   enum: ["Yes", "No"],
+    // },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "category",

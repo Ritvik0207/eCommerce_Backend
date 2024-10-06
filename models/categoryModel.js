@@ -7,6 +7,21 @@ const categorySchema = mongoose.Schema(
       required: [true, "Name is required"],
       unique: true,
     },
+    isProductForKids: {
+      type: Boolean,
+      default: false,
+    },
+    sex: {
+      type: String,
+      enum: ["Male", "Female", "Neutral"],
+      required: true,
+    },
+    subCategories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "subCategory",
+      },
+    ],
   },
   { timestamps: true }
 );

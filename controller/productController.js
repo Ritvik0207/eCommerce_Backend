@@ -5,7 +5,9 @@ const categoryModel = require("../models/categoryModel");
 
 const createProduct = async (req, res) => {
   try {
+    console.log("creating product");
     const info = req.body;
+    console.log(info);
     const { files } = req;
     console.log("test", files, info);
     const fieldname = [];
@@ -14,19 +16,24 @@ const createProduct = async (req, res) => {
       const fileId = await uploadFile(file);
       fieldname.push(fileId);
     }
+
+    console.log(info, fieldname);
     const product = await productModel.create({
       name: info.name,
       description: info.description,
       price: info.price,
       discount: info.discount,
       quantity: info.quantity,
-      sizelength: info.sizelength,
-      sizewidth: info.sizewidth,
+      sizelength: info?.sizelength || 0,
+      sizewidth: info?.sizewidth || 0,
       // color: info.color,
       category: info.category,
       image_id: fieldname,
       types: info.types,
+      isProductForKids: info.isProductForKids === "true",
+      sex: info.sex,
     });
+
     res.status(201).json({
       success: true,
       message: "Product succesfully created",
@@ -41,6 +48,44 @@ const createProduct = async (req, res) => {
   }
 };
 
+const filterAllProductByPrice = async (req, res) => {
+  try {
+    const { new_price = "", category = "" } = req.params;
+
+    const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+    const priceRange = new_price.split("-");
+    if (priceRange.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid price range format.",
+      });
+    }
+
+    const lowerPrice = Number.parseInt(priceRange[0], 10);
+    const upperPrice = Number.parseInt(priceRange[1], 10);
+
+    const products = await productModel
+      .find({
+        new_price: { $gte: lowerPrice, $lte: upperPrice },
+      })
+      .populate("category");
+
+    console.log("Products:", products);
+
+    res.status(200).json({
+      success: true,
+      message: "Products successfully fetched",
+      products,
+    });
+  } catch (err) {
+    console.error("Error occurred in filterByPrice:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching products.",
+    });
+  }
+};
 const filterByPrice = async (req, res) => {
   try {
     const { new_price = "", category = "" } = req.params;
@@ -267,24 +312,31 @@ const getProductTypes = async (req, res) => {
     });
   }
 };
-const getProductByCategoryId = async (req, res) => {
+const getProductsByCategoryId = async (req, res) => {
   try {
-    const { name } = req.query;
-    console.log(req.params);
-    const decodedName = decodeURIComponent(name); // Decode the name parameter
+    const { id } = req.query;
+    // console.log(req.params);
+    // const decodedName = decodeURIComponent(name); // Decode the name parameter
 
     //Rani-Phee
-    const category = await categoryModel.findOne({ name: name });
+    const category = await categoryModel.findById(id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found.",
+      }); // Category not found, return 404 Not Found response.
+    }
     //{ name:"rani-phee", _id:"lsjfsd"}
-    const product = await productModel.find({ category: category._id });
-    console.log(decodedName);
-    console.log(category);
-    console.log(product);
+    const products = await productModel.find({ category: id });
+    // console.log(decodedName);
+    // console.log(category);
+    // console.log(product);
 
     res.status(200).json({
       success: true,
       message: "Product category succesfully fetch",
-      product,
+      products,
     });
   } catch (err) {
     console.log(err);
@@ -298,6 +350,7 @@ const getProductByCategoryId = async (req, res) => {
 module.exports = {
   createProduct,
   filterByPrice,
+  filterAllProductByPrice,
   getAllProduct,
   updateProduct,
   updateProductFav,
@@ -305,5 +358,5 @@ module.exports = {
   getProductById,
   createProductTypes,
   getProductTypes,
-  getProductByCategoryId,
+  getProductsByCategoryId,
 };

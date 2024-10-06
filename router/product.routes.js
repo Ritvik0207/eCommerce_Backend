@@ -7,9 +7,10 @@ const {
   getProductById,
   createProductTypes,
   getProductTypes,
-  getProductByCategoryId,
   updateProductFav,
   filterByPrice,
+  filterAllProductByPrice,
+  getProductsByCategoryId,
 } = require("../controller/productController");
 const multer = require("multer");
 
@@ -18,6 +19,7 @@ const upload = multer();
 //category router
 route.post("/create", upload.array("images"), createProduct);
 route.get("/filterbyprice/:category/:new_price", filterByPrice);
+route.get("/filterbyprice/:new_price", filterAllProductByPrice);
 route.get("/allproduct", getAllProduct);
 route.put("/update/:id", updateProduct);
 route.put("/updatefav/:id", updateProductFav);
@@ -26,7 +28,7 @@ route.get("/getOneProduct/:id", getProductById);
 route.get("/query", getProductById);
 route.post("/createProductType", createProductTypes);
 route.get("/getproductType/:types", getProductTypes);
-route.get("/getProductCategoryById", getProductByCategoryId);
+route.get("/getProductsCategoryById", getProductsByCategoryId);
 // route.delete("/delete/:id", deleteCategory);
 // route.put("/update/:id", updateCategory);
 module.exports = route;

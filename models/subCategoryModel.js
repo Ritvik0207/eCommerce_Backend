@@ -5,7 +5,7 @@ const subCategorySchema = mongoose.Schema(
     subCategoryName: {
       type: String,
       required: [true, "Name is required"],
-      unique: true,
+      // unique: true,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,

@@ -1,13 +1,19 @@
 const categoryModel = require("../models/categoryModel");
+const getCategories = require("./getCategories.controller");
 
 const createCategory = async (req, res) => {
   try {
-    const { name } = req.body;
-    const categoryExist = await categoryModel.findOne({ name });
-    console.log("categoryExist");
+    const { name, sex, isProductForKids } = req.body;
+    const categoryExist = await categoryModel.findOne({
+      name,
+      sex,
+      isProductForKids,
+    });
     if (categoryExist) return res.json("Category exist");
     const category = await new categoryModel({
       name,
+      isProductForKids,
+      sex,
     }).save();
     res.status(201).json({
       success: true,
@@ -23,20 +29,20 @@ const createCategory = async (req, res) => {
   }
 };
 
-const getCategory = async (req, res) => {
-  try {
-    const category = await categoryModel.find();
-    res
-      .status(200)
-      .json({ success: true, message: "Category succesfully fetch", category });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
+// const getCategory = async (req, res) => {
+//   try {
+//     const category = await categoryModel.find();
+//     res
+//       .status(200)
+//       .json({ success: true, message: "Category succesfully fetch", category });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
 const deleteCategory = async (req, res) => {
   try {
     const id = req.params.id;
@@ -76,7 +82,8 @@ const updateCategory = async (req, res) => {
 
 module.exports = {
   createCategory,
-  getCategory,
+  // getCategory,
   deleteCategory,
   updateCategory,
+  getCategories,
 };
