@@ -11,6 +11,7 @@ const {
   filterByPrice,
   filterAllProductByPrice,
   getProductsByCategoryId,
+  getTotalProductCount,
 } = require("../controller/productController");
 const multer = require("multer");
 
@@ -29,6 +30,7 @@ route.get("/query", getProductById);
 route.post("/createProductType", createProductTypes);
 route.get("/getproductType/:types", getProductTypes);
 route.get("/getProductsCategoryById", getProductsByCategoryId);
+route.get("/total", getTotalProductCount);
 // route.delete("/delete/:id", deleteCategory);
 // route.put("/update/:id", updateCategory);
 module.exports = route;

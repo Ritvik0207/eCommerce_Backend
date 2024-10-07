@@ -347,6 +347,25 @@ const getProductsByCategoryId = async (req, res) => {
   }
 };
 
+//for calculating the number of products
+const getTotalProductCount = async (req, res) => {
+  try {
+    const totalProducts = await productModel.countDocuments();
+    res.status(200).json({
+      success: true,
+      message: "Total product count fetched successfully",
+      total: totalProducts,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while fetching total product count",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   createProduct,
   filterByPrice,
@@ -359,4 +378,5 @@ module.exports = {
   createProductTypes,
   getProductTypes,
   getProductsByCategoryId,
+  getTotalProductCount,
 };
