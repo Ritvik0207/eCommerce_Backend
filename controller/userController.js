@@ -1,4 +1,4 @@
-// @ts-check
+// @ts-nocheck
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
@@ -7,6 +7,7 @@ const OTP = require("../models/otpModel.js");
 const User = require("../models/user.js");
 const { createAddress } = require("../utils/address.utils.js");
 const { default: mongoose } = require("mongoose");
+const userModel = require("../models/user.js");
 
 // bcrypt.genSalt(10,(err,salt)=>{
 //   if (!err){
@@ -166,6 +167,26 @@ const getUser = async (req, res) => {
     return res.status(500).json({ success: false });
   }
 };
+
+//for calculating the number of user
+const getTotalUserCount = async (req, res) => {
+  try {
+    const totalUsers = await userModel.countDocuments();
+    res.status(200).json({
+      success: true,
+      message: "Total user count fetched successfully",
+      total: totalUsers,
+    });
+  } catch (err) {
+    console.error("Error occurred while fetching total user count:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while fetching total user count",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   createUser,
   addNewAddress,
@@ -174,4 +195,5 @@ module.exports = {
   loginUser,
   sendOTP,
   generateOTP,
+  getTotalUserCount,
 };

@@ -80,10 +80,30 @@ const updateCategory = async (req, res) => {
   }
 };
 
+//for calculating the number of categories
+const getTotalCategoryCount = async (req, res) => {
+  try {
+    const totalCategories = await categoryModel.countDocuments();
+    res.status(200).json({
+      success: true,
+      message: "Total category count fetched successfully",
+      total: totalCategories,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: "Error occurred while fetching total category count",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   createCategory,
   // getCategory,
   deleteCategory,
   updateCategory,
   getCategories,
+  getTotalCategoryCount,
 };

@@ -11,7 +11,7 @@ const addressRoutes = require("./router/address.routes");
 const carouselRoutes = require("./router/carousel.routes");
 const contactRoutes = require("./router/contact.routes");
 const subCategoryRoutes = require("./router/subCategory.routes");
-// const totalCountProductRoutes = require("./router/getTotalProductCount");
+
 const cors = require("cors");
 const Razorpay = require("razorpay");
 const crypto = require("node:crypto");
@@ -81,7 +81,6 @@ app.use("/order", orderProductRoutes);
 app.use("/carousel", carouselRoutes);
 app.use("/contact", contactRoutes);
 app.use("/subCategory", subCategoryRoutes);
-app.use("/product", productRoutes);
 app.use(errorHandler);
 // app.use("/address", addressRoutes);
 connect();

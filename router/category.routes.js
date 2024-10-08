@@ -6,6 +6,7 @@ const {
   deleteCategory,
   updateCategory,
   getCategories,
+  getTotalCategoryCount,
 } = require("../controller/categoryController");
 const categoryModel = require("../models/categoryModel");
 // const getCategories = require("../controller/getCategories.controller");
@@ -17,4 +18,5 @@ route.post("/create", createCategory);
 // route.get("/allcategory", getCategory);
 route.delete("/delete/:id", deleteCategory);
 route.put("/update/:id", updateCategory);
+route.get("/categoryCount", getTotalCategoryCount);
 module.exports = route;

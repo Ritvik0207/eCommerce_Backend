@@ -8,6 +8,7 @@ const {
   getAddressByUserId,
   sendOTP,
   generateOTP,
+  getTotalUserCount,
 } = require("../controller/userController");
 
 const route = express.Router();
@@ -17,6 +18,7 @@ route.post("/addNewAddress", addNewAddress);
 route.post("/getAddressByUserId", getAddressByUserId); //http:localhost:3000/user/create
 route.get("/data", getUser);
 route.post("/login", loginUser);
+route.get("/totalUsers", getTotalUserCount);
 
 //otp
 route.post("/sendotp", async (req, res) => {
