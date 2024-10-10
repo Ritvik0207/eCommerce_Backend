@@ -60,9 +60,8 @@ async function sendOTP(email, otp) {
   const info = await transporter.sendMail({
     from: '"Lanthoiba" <lanthoibaecommerce@gmail.com>', // Sender address
     to: email, // List of receivers
-    subject: "OTP for Account Verification", // Subject line
-    text: `Your OTP for account verification is: ${otp}`, // Plain text body
-    // html: '<b>Hello world?</b>', // HTML body (if needed)
+    subject: "OTP for Account Verification",
+    text: `Your OTP for account verification is: ${otp}`,
   });
 
   console.log("Message sent: %s", info.messageId);

@@ -5,7 +5,7 @@ const categorySchema = mongoose.Schema(
     name: {
       type: String,
       required: [true, "Name is required"],
-      unique: true,
+      // unique: true,
     },
     isProductForKids: {
       type: Boolean,
@@ -25,5 +25,11 @@ const categorySchema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// categorySchema.index(
+//   { name: 1, sex: 1, isProductForKids: 1 },
+//   { unique: true }
+// );
+
 const categoryModel = mongoose.model("category", categorySchema);
 module.exports = categoryModel;
