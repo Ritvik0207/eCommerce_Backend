@@ -1,6 +1,5 @@
-const mongoose = require("mongoose"); // Erase if already required
+const mongoose = require("mongoose");
 
-// Declare the Schema of the Mongo model
 const carouselSchema = new mongoose.Schema({
   subtitle: {
     type: String,
@@ -14,11 +13,10 @@ const carouselSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  img: {
+  img_id: {
     type: String,
     required: true,
   },
 });
 
-//Export the model
 module.exports = mongoose.model("carousels", carouselSchema);
