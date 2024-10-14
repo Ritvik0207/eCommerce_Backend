@@ -18,7 +18,7 @@ const multer = require("multer");
 const route = express.Router();
 const upload = multer();
 //category router
-route.post("/create", upload.array("images"), createProduct);
+route.post("/create", upload.array("image_id"), createProduct);
 route.get("/filterbyprice/:category/:new_price", filterByPrice);
 route.get("/filterbyprice/:new_price", filterAllProductByPrice);
 route.get("/allproduct", getAllProduct);

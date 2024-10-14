@@ -23,6 +23,7 @@ const createProduct = async (req, res) => {
       description: info.description,
       price: info.price,
       discount: info.discount,
+      discountedPrice: info.discountedPrice,
       quantity: info.quantity,
       sizelength: info?.sizelength || 0,
       sizewidth: info?.sizewidth || 0,
@@ -32,6 +33,7 @@ const createProduct = async (req, res) => {
       types: info.types,
       isProductForKids: info.isProductForKids === "true",
       sex: info.sex,
+      fav: info.fav,
     });
 
     res.status(201).json({
