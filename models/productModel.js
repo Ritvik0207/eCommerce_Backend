@@ -44,11 +44,11 @@ const productSchema = mongoose.Schema(
       enum: ["Male", "Female", "Neutral"],
       required: true,
     },
-    // fav: {
-    //   type: String,
-    //   default: "No",
-    //   enum: ["Yes", "No"],
-    // },
+    fav: {
+      type: String,
+      default: "No",
+      enum: ["Yes", "No"],
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "category",
