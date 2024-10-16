@@ -45,7 +45,7 @@ const productSchema = mongoose.Schema(
     },
     sex: {
       type: String,
-      enum: ["Male", "Female", "Neutral"],
+      enum: ["Male", "Female"],
       required: true,
     },
     fav: {
@@ -58,9 +58,9 @@ const productSchema = mongoose.Schema(
       ref: "category",
       required: true,
     },
-    types: {
+    subcategory: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "productTypes",
+      ref: "subCategory",
       required: true,
     },
   },
