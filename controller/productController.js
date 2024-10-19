@@ -31,6 +31,7 @@ const createProduct = async (req, res) => {
       category: info.category,
       image_id: fieldname,
       subcategory: info.subcategory,
+      types: info.types,
       isProductForKids: info.isProductForKids === "true",
       sex: info.sex,
       fav: info.fav,

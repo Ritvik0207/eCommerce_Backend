@@ -1,5 +1,5 @@
 const categoryModel = require("../models/categoryModel");
-const SubCategory = require("../models/subCategoryModel");
+const subCategoryModel = require("../models/subCategoryModel");
 
 const createSubCategory = async (req, res) => {
   try {
