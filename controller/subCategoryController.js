@@ -52,7 +52,21 @@ const getSubCategory = async (req, res) => {
   }
 };
 
+// const getSubCategoryById = async (req, res) => {
+//   const { categoryId } = req.params;
+//   try {
+//     const subCategory = await subCategoryModel
+//       .findById(categoryId)
+//       .populate("subcategories")
+//       .exec();
+//     res.status(200).json(subCategory.subcategories);
+//   } catch (error) {
+//     res.status(400).json({ error: "Category not found" });
+//   }
+// };
+
 module.exports = {
   createSubCategory,
   getSubCategory,
+  // getSubCategoryById,
 };

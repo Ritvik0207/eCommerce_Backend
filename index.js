@@ -85,6 +85,6 @@ app.use(errorHandler);
 // app.use("/address", addressRoutes);
 connect();
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
   console.log("Server is running");
 });
