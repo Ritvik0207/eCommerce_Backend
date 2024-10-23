@@ -1,5 +1,7 @@
 const express = require("express");
 const asyncHandler = require("express-async-handler");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 const {
   createCategory,
   // getCategory,
@@ -14,7 +16,7 @@ const route = express.Router();
 
 //category router
 route.get("/", getCategories);
-route.post("/create", createCategory);
+route.post("/create", upload.single("image"), createCategory);
 // route.get("/allcategory", getCategory);
 route.delete("/delete/:id", deleteCategory);
 route.put("/update/:id", updateCategory);

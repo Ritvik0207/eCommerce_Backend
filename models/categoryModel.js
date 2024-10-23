@@ -7,6 +7,10 @@ const categorySchema = mongoose.Schema(
       required: [true, "Name is required"],
       // unique: true,
     },
+    image: {
+      type: String,
+      required: true,
+    },
     isProductForKids: {
       type: Boolean,
       default: false,

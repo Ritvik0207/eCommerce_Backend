@@ -2,10 +2,10 @@ const carouselModel = require("../models/carouselModel");
 const { uploadFile } = require("../upload/upload");
 const createCarousel = async (req, res) => {
   try {
-    console.log("Request Headers:", req.headers);
-    console.log("Request Body:", req.body);
-    console.log("File Object:", req.file);
-    console.log(req);
+    // console.log("Request Headers:", req.headers);
+    // console.log("Request Body:", req.body);
+    // console.log("File Object:", req.file);
+    // console.log(req);
 
     const info = req.body;
     const fileObject = req.file; // single file from req.file
