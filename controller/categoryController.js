@@ -4,7 +4,7 @@ const { uploadFile } = require("../upload/upload");
 
 const createCategory = async (req, res) => {
   try {
-    const { name, sex, isProductForKids, image } = req.body;
+    const { name, gender, isProductForKids, image } = req.body;
     const fileObject = req.file;
 
     if (!fileObject) {
@@ -17,7 +17,7 @@ const createCategory = async (req, res) => {
     const fieldname = await uploadFile(fileObject);
     const categoryExist = await categoryModel.findOne({
       name,
-      sex,
+      gender,
       isProductForKids,
       image,
     });
@@ -25,7 +25,7 @@ const createCategory = async (req, res) => {
     const category = await new categoryModel({
       name,
       isProductForKids,
-      sex,
+      gender,
       image: fieldname,
     }).save();
     res.status(201).json({
