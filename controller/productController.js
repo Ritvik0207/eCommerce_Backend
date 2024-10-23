@@ -33,7 +33,7 @@ const createProduct = async (req, res) => {
       subcategory: info.subcategory,
       types: info.types,
       isProductForKids: info.isProductForKids === "true",
-      sex: info.sex,
+      gender: info.gender,
       fav: info.fav,
     });
 

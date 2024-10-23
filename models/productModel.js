@@ -43,7 +43,7 @@ const productSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    sex: {
+    gender: {
       type: String,
       enum: ["Male", "Female"],
       required: true,
