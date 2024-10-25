@@ -1,32 +1,32 @@
 const categoryModel = require("../models/categoryModel");
 const getCategories = require("./getCategories.controller");
-const { uploadFile } = require("../upload/upload");
+// const { uploadFile } = require("../upload/upload");
 
 const createCategory = async (req, res) => {
   try {
-    const { name, gender, isProductForKids, image } = req.body;
-    const fileObject = req.file;
+    const { name, gender, isProductForKids } = req.body;
+    // const fileObject = req.file;
 
-    if (!fileObject) {
-      return res.status(400).json({
-        success: false,
-        message: "File is required",
-      });
-    }
+    // if (!fileObject) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "File is required",
+    //   });
+    // }
 
-    const fieldname = await uploadFile(fileObject);
+    // const fieldname = await uploadFile(fileObject);
     const categoryExist = await categoryModel.findOne({
       name,
       gender,
       isProductForKids,
-      image,
+      // image,
     });
     if (categoryExist) return res.json("Category exist");
     const category = await new categoryModel({
       name,
       isProductForKids,
       gender,
-      image: fieldname,
+      // image: fieldname,
     }).save();
     res.status(201).json({
       success: true,
