@@ -63,11 +63,16 @@ const productSchema = mongoose.Schema(
       ref: "subCategory",
       required: true,
     },
-    types: {
+    collection: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "productTypes",
+      ref: "collection",
       required: true,
     },
+    // types: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "productTypes",
+    //   required: true,
+    // },
   },
   { timestamps: true }
 );

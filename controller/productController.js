@@ -7,9 +7,9 @@ const createProduct = async (req, res) => {
   try {
     console.log("creating product");
     const info = req.body;
-    console.log(info);
+    // console.log(info);
     const { files } = req;
-    console.log("test", files, info);
+    // console.log("test", files, info);
     const fieldname = [];
     for (const file of files) {
       console.log(file);
@@ -31,7 +31,8 @@ const createProduct = async (req, res) => {
       category: info.category,
       image_id: fieldname,
       subcategory: info.subcategory,
-      types: info.types,
+      collection: info.collection,
+      // types: info.types,
       isProductForKids: info.isProductForKids === "true",
       gender: info.gender,
       fav: info.fav,
@@ -159,15 +160,10 @@ const filterByPrice = async (req, res) => {
 // Get and filtering the products
 const getAllProduct = async (req, res) => {
   try {
-    // Get the product name query parameter from the request
     const { productName } = req.query;
-
-    // Construct the MongoDB query to filter products by product name
     const query = productName
       ? { name: { $regex: productName, $options: "i" } }
       : {};
-
-    // Find products matching the query and populate the category field
     const products = await productModel
       .find(query)
       .populate("category")
