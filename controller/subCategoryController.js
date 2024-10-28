@@ -4,13 +4,7 @@ const subCategoryModel = require("../models/subCategoryModel");
 const createSubCategory = async (req, res) => {
   try {
     const subCategoryData = req.body;
-
-    // TODO: validate the subCategory data
-
-    // 1. Create the new subcategory
-    const newSubCategory = await SubCategory.create(subCategoryData);
-
-    // 2. Find the category by ID and update its subCategories array
+    const newSubCategory = await subCategoryModel.create(subCategoryData);
     const updatedCategory = await categoryModel
       .findByIdAndUpdate(
         subCategoryData.category,
