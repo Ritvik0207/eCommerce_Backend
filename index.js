@@ -21,7 +21,23 @@ require("dotenv").config();
 const PORT = process.env.PORT;
 const app = express();
 
+// const allowedOrigins = [
+//   "https://eyongkart.com",
+//   "https://user-site.vercel.app", // Replace with your actual Vercel URL for the user site
+//   "https://admin-site.vercel.app" // Replace with your actual Vercel URL for the admin site
+// ];
 app.use(cors());
+
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       return callback(null, true);
+//     }
+//     callback(new Error("Not allowed by CORS"));
+//   },
+//   credentials: true,
+// }));
+
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
