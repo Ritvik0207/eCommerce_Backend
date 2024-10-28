@@ -24,7 +24,7 @@ const createProduct = async (req, res) => {
       price: info.price,
       discount: info.discount,
       discountedPrice: info.discountedPrice,
-      quantity: info.quantity,
+      productquantity: info.productquantity,
       sizelength: info?.sizelength || 0,
       sizewidth: info?.sizewidth || 0,
       // color: info.color,
