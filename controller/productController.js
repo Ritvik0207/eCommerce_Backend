@@ -2,6 +2,7 @@ const productModel = require("../models/productModel");
 const productTypesModel = require("../models/productTypesModel");
 const { uploadFile } = require("../upload/upload");
 const categoryModel = require("../models/categoryModel");
+const commentRatingModel = require("../models/commentRatingModel");
 
 const createProduct = async (req, res) => {
   try {
@@ -180,6 +181,40 @@ const getAllProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+const getProductWithComments = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const product = await productModel
+      .findById(productId)
+      .populate("category")
+      .populate("collection")
+      .lean();
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+    const comments = await commentRatingModel
+      .find({ productId })
+      .populate("userId", "name");
+
+    res.status(200).json({
+      success: true,
+      message: "Product with comments successfully fetched",
+      product,
+      comments,
+    });
+  } catch (err) {
+    console.error("Error occurred in getProductWithComments:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching product with comments.",
       error: err.message,
     });
   }
@@ -371,6 +406,7 @@ module.exports = {
   filterByPrice,
   filterAllProductByPrice,
   getAllProduct,
+  getProductWithComments,
   updateProduct,
   updateProductFav,
   deleteProduct,

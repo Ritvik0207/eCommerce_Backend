@@ -12,6 +12,7 @@ const carouselRoutes = require("./router/carousel.routes");
 const contactRoutes = require("./router/contact.routes");
 const subCategoryRoutes = require("./router/subCategory.routes");
 const collectionRoutes = require("./router/collection.routes");
+const commentRatingRoutes = require("./router/commentRating.routes");
 
 const cors = require("cors");
 const Razorpay = require("razorpay");
@@ -99,6 +100,7 @@ app.use("/carousel", carouselRoutes);
 app.use("/contact", contactRoutes);
 app.use("/subCategory", subCategoryRoutes);
 app.use("/collection", collectionRoutes);
+app.use("/commentrating", commentRatingRoutes);
 app.use(errorHandler);
 // app.use("/address", addressRoutes);
 connect();

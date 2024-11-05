@@ -12,6 +12,7 @@ const {
   filterAllProductByPrice,
   getProductsByCategoryId,
   getTotalProductCount,
+  getProductWithComments,
 } = require("../controller/productController");
 const multer = require("multer");
 
@@ -22,6 +23,7 @@ route.post("/create", upload.array("image_id"), createProduct);
 route.get("/filterbyprice/:category/:new_price", filterByPrice);
 route.get("/filterbyprice/:new_price", filterAllProductByPrice);
 route.get("/allproduct", getAllProduct);
+route.get("/products/:productId/comments", getProductWithComments);
 route.put("/update/:id", updateProduct);
 route.put("/updatefav/:id", updateProductFav);
 route.delete("/delete/:id", deleteProduct);

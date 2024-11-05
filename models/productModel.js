@@ -68,6 +68,10 @@ const productSchema = mongoose.Schema(
       ref: "collection",
       required: true,
     },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
     // types: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref: "productTypes",
