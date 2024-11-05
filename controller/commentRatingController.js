@@ -2,21 +2,52 @@ const commentRatingModel = require("../models/commentRatingModel");
 const productModel = require("../models/productModel");
 const writeComment = async (req, res) => {
   try {
-    const { productId, userId, commentText, rating } = req.body;
-    const commentRating = await new commentRatingModel({
-      productId,
-      userId,
-      commentText,
-      ratings: [{ userId, rating }],
-    }).save();
-    await updateProductAverageRating(productId);
-    res.status(201).json({
-      success: true,
-      message: "CommentRating succesfully submitted",
-      commentRating: commentRating,
-    });
+    // console.log("Request Body:", req.body);
+    const { productId, userId, commentText, ratings } = req.body;
+    if (ratings && ratings.length > 0) {
+      const rating = ratings[0].rating;
+      // console.log("Received Rating Value:", rating, "Type:", typeof rating);
+
+      const numericRating = Number.parseFloat(rating);
+      console.log(
+        "Parsed Rating:",
+        numericRating,
+        "Type:",
+        typeof numericRating
+      );
+
+      if (
+        Number.isNaN(numericRating) ||
+        numericRating < 1 ||
+        numericRating > 5
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Rating must be a valid number between 1 and 5.",
+        });
+      }
+
+      const commentRating = await new commentRatingModel({
+        productId,
+        userId,
+        commentText,
+        ratings: [{ userId, rating: numericRating }],
+      }).save();
+
+      await updateProductAverageRating(productId);
+      res.status(201).json({
+        success: true,
+        message: "CommentRating successfully submitted",
+        commentRating: commentRating,
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "No ratings provided.",
+      });
+    }
   } catch (err) {
-    console.log(err);
+    console.log("Error in writeComment:", err);
     res.status(500).json({
       success: false,
       message: err.message,
@@ -48,6 +79,13 @@ const updateRating = async (req, res) => {
   const { commentId } = req.params;
   const { userId, rating } = req.body;
 
+  if (Number.isNaN(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({
+      success: false,
+      message: "Rating must be a number between 1 and 5.",
+    });
+  }
+
   try {
     const comment = await commentRatingModel.findById(commentId);
     if (!comment) return res.status(404).json({ message: "Comment not found" });
@@ -56,7 +94,7 @@ const updateRating = async (req, res) => {
     if (existingRating) {
       existingRating.rating = rating;
     } else {
-      comment.ratings.push({ userId, rating });
+      comment.ratings.push({ userId, rating: Number(rating) });
     }
     await comment.save();
     await updateProductAverageRating(comment.productId);
@@ -67,16 +105,40 @@ const updateRating = async (req, res) => {
   }
 };
 
+// const updateProductAverageRating = async (productId) => {
+//   const comments = await commentRatingModel.find({ productId });
+//   const ratings = comments.flatMap((comment) =>
+//     comment.ratings.map((r) => r.rating)
+//   );
+//   const averageRating = ratings.length
+//     ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2)
+//     : 0;
+
+//   await productModel.findByIdAndUpdate(productId, { averageRating });
+// };
+
 const updateProductAverageRating = async (productId) => {
   const comments = await commentRatingModel.find({ productId });
+
+  // console.log("Comments fetched for productId:", productId, comments);
+
   const ratings = comments.flatMap((comment) =>
     comment.ratings.map((r) => r.rating)
   );
-  const averageRating = ratings.length
-    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2)
+
+  // console.log("Ratings collected:", ratings);
+  const validRatings = ratings.filter(
+    (rating) => typeof rating === "number" && !Number.isNaN(rating)
+  );
+
+  const averageRating = validRatings.length
+    ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length).toFixed(2)
     : 0;
 
-  await productModel.findByIdAndUpdate(productId, { averageRating });
+  // console.log("Calculated Average Rating:", averageRating);
+  await productModel.findByIdAndUpdate(productId, {
+    averageRating: Number(averageRating),
+  });
 };
 
 module.exports = { writeComment, getCommentRating, updateRating };
