@@ -171,19 +171,38 @@ const getAllProduct = async (req, res) => {
       .populate("collection")
       .sort({ createdAt: -1 });
 
+    const comments = await commentRatingModel
+      .find({ productName })
+      .populate("userId", "name");
+
     res.status(200).json({
       success: true,
-      message: "Products successfully fetched",
+      message: "Product with comments successfully fetched",
       products,
+      comments,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error occurred in getProductWithComments:", err);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "An error occurred while fetching product with comments.",
       error: err.message,
     });
   }
+
+  //   res.status(200).json({
+  //     success: true,
+  //     message: "Products successfully fetched",
+  //     products,
+  //   });
+  // } catch (err) {
+  //   console.error(err);
+  //   res.status(500).json({
+  //     success: false,
+  //     message: "Internal server error",
+  //     error: err.message,
+  //   });
+  // }
 };
 
 const getProductWithComments = async (req, res) => {
