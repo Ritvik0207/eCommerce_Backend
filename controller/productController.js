@@ -185,7 +185,7 @@ const getAllProduct = async (req, res) => {
     console.error("Error occurred in getProductWithComments:", err);
     res.status(500).json({
       success: false,
-      message: "An error occurred while fetching product with comments.",
+      message: "An error occurred while fetching product with comments",
       error: err.message,
     });
   }

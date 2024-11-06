@@ -72,6 +72,10 @@ const productSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    totalReviews: {
+      type: Number,
+      default: 0,
+    },
     // types: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref: "productTypes",

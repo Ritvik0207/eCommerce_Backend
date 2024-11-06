@@ -135,9 +135,11 @@ const updateProductAverageRating = async (productId) => {
     ? (validRatings.reduce((a, b) => a + b, 0) / validRatings.length).toFixed(2)
     : 0;
 
+  const totalReviews = comments.length;
   // console.log("Calculated Average Rating:", averageRating);
   await productModel.findByIdAndUpdate(productId, {
     averageRating: Number(averageRating),
+    totalReviews: totalReviews,
   });
 };
 
