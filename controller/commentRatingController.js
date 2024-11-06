@@ -3,7 +3,7 @@ const productModel = require("../models/productModel");
 const writeComment = async (req, res) => {
   try {
     // console.log("Request Body:", req.body);
-    const { productId, userId, commentText, ratings } = req.body;
+    const { productId, userId, title, commentText, ratings } = req.body;
     if (ratings && ratings.length > 0) {
       const rating = ratings[0].rating;
       // console.log("Received Rating Value:", rating, "Type:", typeof rating);
@@ -30,6 +30,7 @@ const writeComment = async (req, res) => {
       const commentRating = await new commentRatingModel({
         productId,
         userId,
+        title,
         commentText,
         ratings: [{ userId, rating: numericRating }],
       }).save();

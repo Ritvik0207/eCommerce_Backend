@@ -11,6 +11,9 @@ const commentRatingSchema = new mongoose.Schema(
       ref: "users",
       required: true,
     },
+    title: {
+      type: String,
+    },
     commentText: {
       type: String,
       required: true,
