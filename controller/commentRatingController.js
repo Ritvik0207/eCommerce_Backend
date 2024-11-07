@@ -71,7 +71,7 @@ const getCommentRating = async (req, res) => {
     const commentRating = await commentRatingModel
       .find()
       .populate("productId")
-      .populate("usersId");
+      .populate("userId");
     res.status(200).json({
       success: true,
       message: "CommentRating succesfully fetch",
