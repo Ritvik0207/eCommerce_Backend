@@ -224,6 +224,7 @@ const getProductWithComments = async (req, res) => {
     const comments = await commentRatingModel
       .find({ productId })
       .populate("userId", "name");
+    // .populate("productId");
 
     res.status(200).json({
       success: true,

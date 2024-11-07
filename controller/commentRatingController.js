@@ -70,8 +70,8 @@ const getCommentRating = async (req, res) => {
   try {
     const commentRating = await commentRatingModel
       .find()
-      .populate({ path: "product", strictPopulate: false })
-      .populate({ path: "users", strictPopulate: false });
+      .populate({ path: "product", strictPopulate: true })
+      .populate({ path: "users", strictPopulate: true });
     res.status(200).json({
       success: true,
       message: "CommentRating succesfully fetch",
