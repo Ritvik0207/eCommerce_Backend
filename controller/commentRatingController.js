@@ -70,8 +70,8 @@ const getCommentRating = async (req, res) => {
   try {
     const commentRating = await commentRatingModel
       .find()
-      .populate("product")
-      .populate("users");
+      .populate("productId")
+      .populate("usersId");
     res.status(200).json({
       success: true,
       message: "CommentRating succesfully fetch",

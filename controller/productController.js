@@ -168,7 +168,7 @@ const getAllProduct = async (req, res) => {
     const products = await productModel
       .find(query)
       .populate("category")
-      .populate("subcategory")
+      .populate("subCategory")
       .populate("collection")
       .sort({ createdAt: -1 });
 

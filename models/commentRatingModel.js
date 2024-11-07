@@ -35,7 +35,6 @@ const commentRatingSchema = new mongoose.Schema(
     // image_id: [
     //   {
     //     type: String,
-    //     required: true,
     //   },
     // ],
   },
