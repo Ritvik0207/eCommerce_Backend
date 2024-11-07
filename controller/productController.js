@@ -213,6 +213,7 @@ const getProductWithComments = async (req, res) => {
       .findById(productId)
       .populate("category")
       .populate("collection")
+      .populate("subcategory")
       .lean();
     if (!product) {
       return res.status(404).json({

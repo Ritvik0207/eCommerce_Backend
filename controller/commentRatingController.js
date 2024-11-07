@@ -1,9 +1,18 @@
 const commentRatingModel = require("../models/commentRatingModel");
 const productModel = require("../models/productModel");
+// const { uploadFile } = require("../upload/upload");
 const writeComment = async (req, res) => {
   try {
     // console.log("Request Body:", req.body);
-    const { productId, userId, title, commentText, ratings } = req.body;
+    const { productId, userId, title, commentText, ratings, image_id } =
+      req.body;
+    // const { files } = req;
+    // const fieldname = [];
+    // for (const file of files) {
+    //   const fileId = await uploadFile(file);
+    //   fieldname.push(fileId);
+    // }
+
     if (ratings && ratings.length > 0) {
       const rating = ratings[0].rating;
       // console.log("Received Rating Value:", rating, "Type:", typeof rating);
@@ -33,6 +42,7 @@ const writeComment = async (req, res) => {
         title,
         commentText,
         ratings: [{ userId, rating: numericRating }],
+        // image_id: fieldname,
       }).save();
 
       await updateProductAverageRating(productId);
