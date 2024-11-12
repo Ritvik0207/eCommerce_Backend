@@ -1,5 +1,3 @@
-// const Delivery = require("./deliveryModel");
-// const Order = require("./orderModel");
 const deliveryModel = require("../models/deliveryModel");
 const orderModel = require("../models/orderModel");
 

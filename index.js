@@ -14,6 +14,9 @@ const subCategoryRoutes = require("./router/subCategory.routes");
 const collectionRoutes = require("./router/collection.routes");
 const commentRatingRoutes = require("./router/commentRating.routes");
 const deliveryRoutes = require("./router/delivery.routes");
+const footerSubHeadingRoutes = require("./router/footerSubHeading.routes");
+const footerLinkRoutes = require("./router/footerlink.routes");
+const footerRoutes = require("./router/footer.routes");
 
 const cors = require("cors");
 const Razorpay = require("razorpay");
@@ -53,8 +56,8 @@ app.post("/order", async (req, res) => {
     console.log(req.body);
     const { buyProduct, currency, receipt } = req.body;
     const razorpay = new Razorpay({
-      key_id: "rzp_test_JIH6EhvgsXj43w",
-      key_secret: "l4JlduSRLcbaB5YrcLkwm2x5",
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_SECRET,
     });
 
     const options = { amount: buyProduct * 100, currency, receipt };
@@ -75,7 +78,7 @@ app.post("/order/validate", async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
     req.body;
 
-  const sha = crypto.createHmac("sha256", "l4JlduSRLcbaB5YrcLkwm2x5");
+  const sha = crypto.createHmac("sha256", process.env.RAZORPAY_SECRET);
   //order_id + "|" + razorpay_payment_id
   sha.update(`${razorpay_order_id}|${razorpay_payment_id}`);
   const digest = sha.digest("hex");
@@ -103,6 +106,9 @@ app.use("/subCategory", subCategoryRoutes);
 app.use("/collection", collectionRoutes);
 app.use("/commentrating", commentRatingRoutes);
 app.use("/delivery", deliveryRoutes);
+app.use("/footersub", footerSubHeadingRoutes);
+app.use("/footerlink", footerLinkRoutes);
+app.use("/footer", footerRoutes);
 app.use(errorHandler);
 // app.use("/address", addressRoutes);
 connect();
