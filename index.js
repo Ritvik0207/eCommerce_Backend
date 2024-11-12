@@ -17,6 +17,7 @@ const deliveryRoutes = require("./router/delivery.routes");
 const footerSubHeadingRoutes = require("./router/footerSubHeading.routes");
 const footerLinkRoutes = require("./router/footerlink.routes");
 const footerRoutes = require("./router/footer.routes");
+const aboutusRoutes = require("./router/aboutus.routes");
 
 const cors = require("cors");
 const Razorpay = require("razorpay");
@@ -109,6 +110,7 @@ app.use("/delivery", deliveryRoutes);
 app.use("/footersub", footerSubHeadingRoutes);
 app.use("/footerlink", footerLinkRoutes);
 app.use("/footer", footerRoutes);
+app.use("/aboutus", aboutusRoutes);
 app.use(errorHandler);
 // app.use("/address", addressRoutes);
 connect();
