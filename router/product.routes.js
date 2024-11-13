@@ -13,6 +13,8 @@ const {
   getProductsByCategoryId,
   getTotalProductCount,
   getProductWithComments,
+  getCollectionNamesByCategory,
+  getCollectionNamesByCategoryAndSubcategory,
 } = require("../controller/productController");
 const multer = require("multer");
 
@@ -33,6 +35,11 @@ route.post("/createProductType", createProductTypes);
 route.get("/getproductType/:types", getProductTypes);
 route.get("/getProductsCategoryById", getProductsByCategoryId);
 route.get("/total", getTotalProductCount);
+route.get(
+  "/sorted/:categoryId/:subcategoryId?",
+  getCollectionNamesByCategoryAndSubcategory
+);
+
 // route.delete("/delete/:id", deleteCategory);
 // route.put("/update/:id", updateCategory);
 module.exports = route;

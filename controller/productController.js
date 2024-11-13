@@ -3,6 +3,7 @@ const productTypesModel = require("../models/productTypesModel");
 const { uploadFile } = require("../upload/upload");
 const categoryModel = require("../models/categoryModel");
 const commentRatingModel = require("../models/commentRatingModel");
+const subCategoryModel = require("../models/subCategoryModel");
 
 const createProduct = async (req, res) => {
   try {
@@ -423,6 +424,50 @@ const getTotalProductCount = async (req, res) => {
   }
 };
 
+const getCollectionNamesByCategoryAndSubcategory = async (req, res) => {
+  try {
+    const { categoryId, subcategoryId } = req.params; // Get category and subcategory IDs from the URL
+
+    // Build the query based on the presence of categoryId and subcategoryId
+    const query = { category: categoryId };
+    if (subcategoryId) {
+      query.subcategory = subcategoryId;
+    }
+
+    // Find products that match the specified category and subcategory IDs, and populate the collection field
+    const products = await productModel.find(query).populate("collection");
+
+    // If no products are found, return a 404 response
+    if (!products.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No products found for the specified category and subcategory",
+      });
+    }
+
+    // Extract collection names from the products
+    const collections = products
+      .filter((product) => product.collection) // Filter out products without a collection
+      .map((product) => product.collection.name);
+
+    // Remove duplicate collection names
+    const uniqueCollections = [...new Set(collections)];
+
+    res.status(200).json({
+      success: true,
+      message: "Collections fetched successfully",
+      collections: uniqueCollections,
+    });
+  } catch (err) {
+    console.error("Error in getCollectionNamesByCategoryAndSubcategory:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching collection names.",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   createProduct,
   filterByPrice,
@@ -437,4 +482,5 @@ module.exports = {
   getProductTypes,
   getProductsByCategoryId,
   getTotalProductCount,
+  getCollectionNamesByCategoryAndSubcategory,
 };
