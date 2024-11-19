@@ -54,30 +54,75 @@ const createProduct = async (req, res) => {
   }
 };
 
+// const filterAllProductByPrice = async (req, res) => {
+//   try {
+//     const { new_price = "", category = "" } = req.params;
+
+//     const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+//     const priceRange = new_price.split("-");
+//     if (priceRange.length !== 2) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid price range format.",
+//         newCategory,
+//       });
+//     }
+
+//     const lowerPrice = Number.parseInt(priceRange[0], 10);
+//     const upperPrice = Number.parseInt(priceRange[1], 10);
+
+//     const products = await productModel
+//       .find({
+//         new_price: { $gte: lowerPrice, $lte: upperPrice },
+//       })
+//       .populate("category");
+
+//     console.log("Products:", products);
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Products successfully fetched",
+//       products,
+//     });
+//   } catch (err) {
+//     console.error("Error occurred in filterByPrice:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "An error occurred while fetching products.",
+//     });
+//   }
+// };
+
 const filterAllProductByPrice = async (req, res) => {
   try {
-    const { new_price = "", category = "" } = req.params;
+    const { new_price = "" } = req.params;
 
-    const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2");
-
+    // Validate price range
     const priceRange = new_price.split("-");
     if (priceRange.length !== 2) {
       return res.status(400).json({
         success: false,
-        message: "Invalid price range format.",
+        message: "Invalid price range format. Use 'lower-upper'.",
       });
     }
 
     const lowerPrice = Number.parseInt(priceRange[0], 10);
     const upperPrice = Number.parseInt(priceRange[1], 10);
 
+    if (Number.isNaN(lowerPrice) || Number.isNaN(upperPrice)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid price values. Please provide valid numbers.",
+      });
+    }
+
+    // Fetch products within the price range
     const products = await productModel
       .find({
         new_price: { $gte: lowerPrice, $lte: upperPrice },
       })
       .populate("category");
-
-    console.log("Products:", products);
 
     res.status(200).json({
       success: true,
@@ -85,59 +130,148 @@ const filterAllProductByPrice = async (req, res) => {
       products,
     });
   } catch (err) {
-    console.error("Error occurred in filterByPrice:", err);
+    console.error("Error occurred in filterAllProductByPrice:", err);
     res.status(500).json({
       success: false,
       message: "An error occurred while fetching products.",
+      error: err.message,
     });
   }
 };
+//old code
+// const filterByPrice = async (req, res) => {
+//   try {
+//     const { new_price = "", category = "" } = req.params;
+
+//     const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+//     const priceRange = new_price.split("-");
+//     if (priceRange.length !== 2) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid price range format.",
+//       });
+//     }
+
+//     const lowerPrice = Number.parseInt(priceRange[0], 10);
+//     const upperPrice = Number.parseInt(priceRange[1], 10);
+
+//     const categoryProduct = await categoryModel.findOne({ name: newCategory });
+//     if (!categoryProduct) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Category not found.",
+//       });
+//     }
+
+//     console.log("Category Product:", categoryProduct);
+
+//     const products = await productModel
+//       .find({
+//         category: categoryProduct._id,
+//         new_price: { $gte: lowerPrice, $lte: upperPrice },
+//       })
+//       .populate("category");
+
+//     console.log("Products:", products);
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Products successfully fetched",
+//       products,
+//     });
+//   } catch (err) {
+//     console.error("Error occurred in filterByPrice:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "An error occurred while fetching products.",
+//     });
+//   }
+// };
+
+//new code
+const mongoose = require("mongoose");
+
 const filterByPrice = async (req, res) => {
   try {
-    const { new_price = "", category = "" } = req.params;
+    const { discountedPrice = "", category = "" } = req.params;
 
-    const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2");
+    // Log inputs for debugging
+    console.log("Category:", category);
+    console.log("Price Range:", discountedPrice);
 
-    const priceRange = new_price.split("-");
-    if (priceRange.length !== 2) {
+    // Validate inputs
+    if (!category) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Category is required." });
+    }
+
+    if (!discountedPrice.includes("-")) {
       return res.status(400).json({
         success: false,
-        message: "Invalid price range format.",
+        message:
+          "Invalid price range format. Use 'lower-upper' (e.g., '0-1000').",
       });
     }
 
-    const lowerPrice = Number.parseInt(priceRange[0], 10);
-    const upperPrice = Number.parseInt(priceRange[1], 10);
+    // Extract lower and upper bounds
+    const [lowerPrice, upperPrice] = discountedPrice.split("-").map(Number);
 
-    const categoryProduct = await categoryModel.findOne({ name: newCategory });
-    if (!categoryProduct) {
-      return res.status(404).json({
+    if (isNaN(lowerPrice) || isNaN(upperPrice)) {
+      return res.status(400).json({
         success: false,
-        message: "Category not found.",
+        message: "Price range must contain valid numbers.",
       });
     }
 
-    console.log("Category Product:", categoryProduct);
+    let categoryProduct;
 
+    // Check if 'category' is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      console.log("Searching by category ID");
+      categoryProduct = await categoryModel.findById(category); // Query by '_id'
+    } else {
+      console.log("Searching by category name");
+      // Replace camelCase or PascalCase category with spaced version
+      const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2").trim();
+
+      categoryProduct = await categoryModel.findOne({
+        name: new RegExp(`^${newCategory}$`, "i"), // Case-insensitive query
+      });
+    }
+
+    if (!categoryProduct) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found." });
+    }
+
+    // Log category for debugging
+    console.log("Category ID:", categoryProduct._id);
+
+    // Fetch products in the price range
     const products = await productModel
       .find({
         category: categoryProduct._id,
-        new_price: { $gte: lowerPrice, $lte: upperPrice },
+        discountedPrice: { $gte: lowerPrice, $lte: upperPrice },
       })
       .populate("category");
 
-    console.log("Products:", products);
+    // Log products for debugging
+    console.log("Products Found:", products);
 
     res.status(200).json({
       success: true,
-      message: "Products successfully fetched",
+      message: "Products successfully fetched.",
       products,
     });
   } catch (err) {
-    console.error("Error occurred in filterByPrice:", err);
+    console.error("Error in filterByPrice:", err);
     res.status(500).json({
       success: false,
-      message: "An error occurred while fetching products.",
+      message: "An error occurred.",
+      error: err.message,
     });
   }
 };
