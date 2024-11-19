@@ -18,6 +18,7 @@ const footerSubHeadingRoutes = require("./router/footerSubHeading.routes");
 const footerLinkRoutes = require("./router/footerlink.routes");
 const footerRoutes = require("./router/footer.routes");
 const aboutusRoutes = require("./router/aboutus.routes");
+const pricerangeRoutes = require("./router/priceRange.routes");
 
 const cors = require("cors");
 const Razorpay = require("razorpay");
@@ -111,6 +112,7 @@ app.use("/footersub", footerSubHeadingRoutes);
 app.use("/footerlink", footerLinkRoutes);
 app.use("/footer", footerRoutes);
 app.use("/aboutus", aboutusRoutes);
+app.use("/pricerange", pricerangeRoutes);
 app.use(errorHandler);
 // app.use("/address", addressRoutes);
 connect();
