@@ -37,7 +37,7 @@ const productSchema = mongoose.Schema(
     },
     productquantity: {
       type: Number,
-      required: true,
+      // required: true,
     },
     isProductForKids: {
       type: Boolean,
@@ -45,7 +45,7 @@ const productSchema = mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["Male", "Female"],
+      enum: ["Male", "Female", "Neutral"],
       required: true,
     },
     fav: {
@@ -58,6 +58,7 @@ const productSchema = mongoose.Schema(
       ref: "category",
       required: true,
     },
+
     subcategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "subCategory",

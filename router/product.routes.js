@@ -15,6 +15,7 @@ const {
   getProductWithComments,
   getCollectionNamesByCategory,
   getCollectionNamesByCategoryAndSubcategory,
+  getFilteredProducts,
 } = require("../controller/productController");
 const multer = require("multer");
 
@@ -39,6 +40,7 @@ route.get(
   "/sorted/:categoryId/:subcategoryId?",
   getCollectionNamesByCategoryAndSubcategory
 );
+route.get("/collectionfiltername", getFilteredProducts);
 
 // route.delete("/delete/:id", deleteCategory);
 // route.put("/update/:id", updateCategory);

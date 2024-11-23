@@ -6,7 +6,7 @@ const createAddress = async (info) => {
       user_id: info.user_id,
       name: info.name,
       address: info.address,
-      city: info.city,
+      district: info.district,
       state: info.state,
       pincode: info.pincode,
       phone: info.phone,

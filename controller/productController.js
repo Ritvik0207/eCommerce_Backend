@@ -9,7 +9,7 @@ const createProduct = async (req, res) => {
   try {
     console.log("creating product");
     const info = req.body;
-    // console.log(info);
+    console.log(info);
     const { files } = req;
     // console.log("test", files, info);
     const fieldname = [];
@@ -602,6 +602,49 @@ const getCollectionNamesByCategoryAndSubcategory = async (req, res) => {
   }
 };
 
+const getFilteredProducts = async (req, res) => {
+  try {
+    const { categoryId, subcategoryId, collectionName } = req.query;
+
+    console.log("Received query params:", req.query);
+
+    const query = {};
+    if (categoryId) query.category = categoryId;
+    if (subcategoryId) query.subcategory = subcategoryId;
+
+    // Fetch products with populated collection and filter by collection name
+    const products = await productModel.find(query).populate({
+      path: "collection", // Reference field in productModel
+      match: { name: collectionName }, // Match collection name here
+    });
+
+    // Filter out products where collection does not match
+    const filteredProducts = products.filter((product) => product.collection);
+
+    // Check if filtered products are found
+    if (!filteredProducts.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No products found for the selected filters.",
+      });
+    }
+
+    // Respond with the filtered products
+    res.status(200).json({
+      success: true,
+      message: "Products successfully fetched.",
+      products: filteredProducts,
+    });
+  } catch (err) {
+    console.error("Error in getFilteredProducts:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching products.",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   createProduct,
   filterByPrice,
@@ -617,4 +660,5 @@ module.exports = {
   getProductsByCategoryId,
   getTotalProductCount,
   getCollectionNamesByCategoryAndSubcategory,
+  getFilteredProducts,
 };
