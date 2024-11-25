@@ -3,6 +3,10 @@ const productSchema = mongoose.Schema(
   {
     image_id: [
       {
+        // path: {
+        //   type: String, // Path to the optimized image
+        //   required: true,
+        // },
         type: String,
         required: true,
       },

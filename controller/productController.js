@@ -4,6 +4,10 @@ const { uploadFile } = require("../upload/upload");
 const categoryModel = require("../models/categoryModel");
 const commentRatingModel = require("../models/commentRatingModel");
 const subCategoryModel = require("../models/subCategoryModel");
+const mongoose = require("mongoose");
+// const sharp = require("sharp");
+// const path = require("path");
+// const fs = require("fs");
 
 const createProduct = async (req, res) => {
   try {
@@ -11,7 +15,6 @@ const createProduct = async (req, res) => {
     const info = req.body;
     console.log(info);
     const { files } = req;
-    // console.log("test", files, info);
     const fieldname = [];
     for (const file of files) {
       console.log(file);
@@ -54,42 +57,70 @@ const createProduct = async (req, res) => {
   }
 };
 
-// const filterAllProductByPrice = async (req, res) => {
+// const createProduct = async (req, res) => {
 //   try {
-//     const { new_price = "", category = "" } = req.params;
+//     console.log("Creating product...");
+//     const info = req.body;
+//     const { files } = req;
 
-//     const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2");
-
-//     const priceRange = new_price.split("-");
-//     if (priceRange.length !== 2) {
+//     if (!files || files.length === 0) {
 //       return res.status(400).json({
 //         success: false,
-//         message: "Invalid price range format.",
-//         newCategory,
+//         message: "No files uploaded.",
 //       });
 //     }
 
-//     const lowerPrice = Number.parseInt(priceRange[0], 10);
-//     const upperPrice = Number.parseInt(priceRange[1], 10);
+//     const imagePaths = [];
 
-//     const products = await productModel
-//       .find({
-//         new_price: { $gte: lowerPrice, $lte: upperPrice },
-//       })
-//       .populate("category");
+//     for (const file of files) {
+//       // Define the path for saving the optimized image
+//       const optimizedImagePath = path.join(
+//         __dirname,
+//         "../uploads/optimized",
+//         `${Date.now()}-${file.originalname}`
+//       );
 
-//     console.log("Products:", products);
+//       // Optimize and save the image using Sharp
+//       await sharp(file.buffer)
+//         .resize(800) // Resize image to 800px width, maintaining aspect ratio
+//         .webp({ quality: 80 }) // Convert to WebP with 80% quality
+//         .toFile(optimizedImagePath);
 
-//     res.status(200).json({
+//       imagePaths.push(optimizedImagePath); // Save the path for the database
+//     }
+
+//     console.log("Image paths:", imagePaths);
+
+//     // Create the product with optimized image paths
+//     const product = await productModel.create({
+//       name: info.name,
+//       description: info.description,
+//       price: info.price,
+//       discount: info.discount,
+//       discountedPrice: info.discountedPrice,
+//       productquantity: info.productquantity,
+//       sizelength: info?.sizelength || 0,
+//       sizewidth: info?.sizewidth || 0,
+//       category: info.category,
+//       image_id: imagePaths, // Save optimized image paths
+//       subcategory: info.subcategory,
+//       collection: info.collection,
+//       isProductForKids: info.isProductForKids === "true",
+//       gender: info.gender,
+//       fav: info.fav,
+//     });
+
+//     res.status(201).json({
 //       success: true,
-//       message: "Products successfully fetched",
-//       products,
+//       message: "Product successfully created with optimized images",
+//       product,
 //     });
 //   } catch (err) {
-//     console.error("Error occurred in filterByPrice:", err);
+//     console.error("Error in createProduct:", err);
 //     res.status(500).json({
 //       success: false,
-//       message: "An error occurred while fetching products.",
+//       message: "An error occurred while creating the product.",
+//       error: err.message,
 //     });
 //   }
 // };
@@ -98,7 +129,6 @@ const filterAllProductByPrice = async (req, res) => {
   try {
     const { new_price = "" } = req.params;
 
-    // Validate price range
     const priceRange = new_price.split("-");
     if (priceRange.length !== 2) {
       return res.status(400).json({
@@ -117,7 +147,6 @@ const filterAllProductByPrice = async (req, res) => {
       });
     }
 
-    // Fetch products within the price range
     const products = await productModel
       .find({
         new_price: { $gte: lowerPrice, $lte: upperPrice },
@@ -138,69 +167,14 @@ const filterAllProductByPrice = async (req, res) => {
     });
   }
 };
-//old code
-// const filterByPrice = async (req, res) => {
-//   try {
-//     const { new_price = "", category = "" } = req.params;
-
-//     const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2");
-
-//     const priceRange = new_price.split("-");
-//     if (priceRange.length !== 2) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid price range format.",
-//       });
-//     }
-
-//     const lowerPrice = Number.parseInt(priceRange[0], 10);
-//     const upperPrice = Number.parseInt(priceRange[1], 10);
-
-//     const categoryProduct = await categoryModel.findOne({ name: newCategory });
-//     if (!categoryProduct) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Category not found.",
-//       });
-//     }
-
-//     console.log("Category Product:", categoryProduct);
-
-//     const products = await productModel
-//       .find({
-//         category: categoryProduct._id,
-//         new_price: { $gte: lowerPrice, $lte: upperPrice },
-//       })
-//       .populate("category");
-
-//     console.log("Products:", products);
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Products successfully fetched",
-//       products,
-//     });
-//   } catch (err) {
-//     console.error("Error occurred in filterByPrice:", err);
-//     res.status(500).json({
-//       success: false,
-//       message: "An error occurred while fetching products.",
-//     });
-//   }
-// };
-
-//new code
-const mongoose = require("mongoose");
 
 const filterByPrice = async (req, res) => {
   try {
     const { discountedPrice = "", category = "" } = req.params;
 
-    // Log inputs for debugging
     console.log("Category:", category);
     console.log("Price Range:", discountedPrice);
 
-    // Validate inputs
     if (!category) {
       return res
         .status(400)
@@ -215,7 +189,6 @@ const filterByPrice = async (req, res) => {
       });
     }
 
-    // Extract lower and upper bounds
     const [lowerPrice, upperPrice] = discountedPrice.split("-").map(Number);
 
     if (isNaN(lowerPrice) || isNaN(upperPrice)) {
@@ -230,14 +203,13 @@ const filterByPrice = async (req, res) => {
     // Check if 'category' is a valid MongoDB ObjectId
     if (mongoose.Types.ObjectId.isValid(category)) {
       console.log("Searching by category ID");
-      categoryProduct = await categoryModel.findById(category); // Query by '_id'
+      categoryProduct = await categoryModel.findById(category);
     } else {
       console.log("Searching by category name");
-      // Replace camelCase or PascalCase category with spaced version
       const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2").trim();
 
       categoryProduct = await categoryModel.findOne({
-        name: new RegExp(`^${newCategory}$`, "i"), // Case-insensitive query
+        name: new RegExp(`^${newCategory}$`, "i"),
       });
     }
 
@@ -247,10 +219,8 @@ const filterByPrice = async (req, res) => {
         .json({ success: false, message: "Category not found." });
     }
 
-    // Log category for debugging
     console.log("Category ID:", categoryProduct._id);
 
-    // Fetch products in the price range
     const products = await productModel
       .find({
         category: categoryProduct._id,
@@ -258,7 +228,6 @@ const filterByPrice = async (req, res) => {
       })
       .populate("category");
 
-    // Log products for debugging
     console.log("Products Found:", products);
 
     res.status(200).json({
@@ -517,7 +486,7 @@ const getProductsByCategoryId = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Category not found.",
-      }); // Category not found, return 404 Not Found response.
+      });
     }
     //{ name:"rani-phee", _id:"lsjfsd"}
     const products = await productModel.find({ category: id });
@@ -539,7 +508,6 @@ const getProductsByCategoryId = async (req, res) => {
   }
 };
 
-//for calculating the number of products
 const getTotalProductCount = async (req, res) => {
   try {
     const totalProducts = await productModel.countDocuments();
@@ -560,18 +528,14 @@ const getTotalProductCount = async (req, res) => {
 
 const getCollectionNamesByCategoryAndSubcategory = async (req, res) => {
   try {
-    const { categoryId, subcategoryId } = req.params; // Get category and subcategory IDs from the URL
-
-    // Build the query based on the presence of categoryId and subcategoryId
+    const { categoryId, subcategoryId } = req.params;
     const query = { category: categoryId };
     if (subcategoryId) {
       query.subcategory = subcategoryId;
     }
 
-    // Find products that match the specified category and subcategory IDs, and populate the collection field
     const products = await productModel.find(query).populate("collection");
 
-    // If no products are found, return a 404 response
     if (!products.length) {
       return res.status(404).json({
         success: false,
@@ -579,12 +543,10 @@ const getCollectionNamesByCategoryAndSubcategory = async (req, res) => {
       });
     }
 
-    // Extract collection names from the products
     const collections = products
-      .filter((product) => product.collection) // Filter out products without a collection
+      .filter((product) => product.collection)
       .map((product) => product.collection.name);
 
-    // Remove duplicate collection names
     const uniqueCollections = [...new Set(collections)];
 
     res.status(200).json({
@@ -612,16 +574,13 @@ const getFilteredProducts = async (req, res) => {
     if (categoryId) query.category = categoryId;
     if (subcategoryId) query.subcategory = subcategoryId;
 
-    // Fetch products with populated collection and filter by collection name
     const products = await productModel.find(query).populate({
-      path: "collection", // Reference field in productModel
-      match: { name: collectionName }, // Match collection name here
+      path: "collection",
+      match: { name: collectionName },
     });
 
-    // Filter out products where collection does not match
     const filteredProducts = products.filter((product) => product.collection);
 
-    // Check if filtered products are found
     if (!filteredProducts.length) {
       return res.status(404).json({
         success: false,
@@ -629,7 +588,6 @@ const getFilteredProducts = async (req, res) => {
       });
     }
 
-    // Respond with the filtered products
     res.status(200).json({
       success: true,
       message: "Products successfully fetched.",
