@@ -1,9 +1,12 @@
 const express = require("express");
-const { createAddress, getAddress } = require("../utils/address.utils");
+const {
+  createAddress,
+  getAddress,
+} = require("../controller/address.controller");
 
-const router = express.Router();
+const Route = express.Router();
 
-router.post("/createAddress", createAddress);
-router.get("/getAddress", getAddress);
+Route.post("/create", createAddress);
+Route.get("/get", getAddress);
 
-module.exports = router;
+module.exports = Route;

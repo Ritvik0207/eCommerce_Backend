@@ -2,6 +2,8 @@ const express = require("express");
 const {
   createCarousel,
   carouselList,
+  updateCarousel,
+  deleteCarousel,
 } = require("../controller/carouselController");
 
 const router = express.Router();
@@ -14,6 +16,8 @@ router
   .route("/")
   .post(upload.single("img_id"), createCarousel)
   .get(carouselList);
+router.put("/update/:id", upload.single("img_id"), updateCarousel);
+router.delete("/delete/:id", deleteCarousel);
 
 // router.post("/carousel", upload.single("img"), createCarousel);
 // router.get("/carousel-list", carouselList);

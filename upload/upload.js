@@ -21,7 +21,16 @@ const uploadFile = async (fileObject, resourceType = "image") => {
     // Use Cloudinary's upload_stream method to upload the file
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { resource_type: resourceType }, // Uploading an image file
+        {
+          resource_type: resourceType,
+
+          // folder: "optimized-images", // Optional: Specify a folder in Cloudinary
+          // transformation: [
+          //   { width: 800, crop: "limit" }, // Limit width to 800px
+          //   { quality: "auto" }, // Automatic quality optimization
+          //   { fetch_format: "auto" }, // Automatic format conversion (e.g., WebP)
+          // ],
+        }, // Uploading an image file
         (error, result) => {
           if (error) {
             reject(error); // Handle upload error

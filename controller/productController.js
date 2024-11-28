@@ -6,8 +6,8 @@ const commentRatingModel = require("../models/commentRatingModel");
 const subCategoryModel = require("../models/subCategoryModel");
 const mongoose = require("mongoose");
 // const sharp = require("sharp");
-// const path = require("path");
-// const fs = require("fs");
+// const path = require("node:path");
+// const fs = require("node:fs");
 
 const createProduct = async (req, res) => {
   try {
@@ -70,28 +70,35 @@ const createProduct = async (req, res) => {
 //       });
 //     }
 
-//     const imagePaths = [];
+//     const optimizedDir = path.join(__dirname, "../uploads/optimized");
+
+//     // Ensure the optimized directory exists
+//     if (!fs.existsSync(optimizedDir)) {
+//       fs.mkdirSync(optimizedDir, { recursive: true });
+//     }
+
+//     const imagePaths = []; // Initialize an array for image paths
 
 //     for (const file of files) {
-//       // Define the path for saving the optimized image
+//       const safeFileName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+
 //       const optimizedImagePath = path.join(
 //         __dirname,
 //         "../uploads/optimized",
-//         `${Date.now()}-${file.originalname}`
+//         `${Date.now()}-${safeFileName}`
 //       );
 
-//       // Optimize and save the image using Sharp
+//       // Optimize and save the image
 //       await sharp(file.buffer)
-//         .resize(800) // Resize image to 800px width, maintaining aspect ratio
+//         .resize(800) // Resize to 800px width while maintaining aspect ratio
 //         .webp({ quality: 80 }) // Convert to WebP with 80% quality
 //         .toFile(optimizedImagePath);
 
-//       imagePaths.push(optimizedImagePath); // Save the path for the database
+//       // Push as an object with a `path` field
+//       imagePaths.push({ path: optimizedImagePath });
 //     }
 
-//     console.log("Image paths:", imagePaths);
-
-//     // Create the product with optimized image paths
+//     // Create the product with the properly formatted `image_id`
 //     const product = await productModel.create({
 //       name: info.name,
 //       description: info.description,
@@ -102,7 +109,7 @@ const createProduct = async (req, res) => {
 //       sizelength: info?.sizelength || 0,
 //       sizewidth: info?.sizewidth || 0,
 //       category: info.category,
-//       image_id: imagePaths, // Save optimized image paths
+//       image_id: imagePaths, // Pass the array of objects here
 //       subcategory: info.subcategory,
 //       collection: info.collection,
 //       isProductForKids: info.isProductForKids === "true",
@@ -191,7 +198,7 @@ const filterByPrice = async (req, res) => {
 
     const [lowerPrice, upperPrice] = discountedPrice.split("-").map(Number);
 
-    if (isNaN(lowerPrice) || isNaN(upperPrice)) {
+    if (Number.isNaN(lowerPrice) || Number.isNaN(upperPrice)) {
       return res.status(400).json({
         success: false,
         message: "Price range must contain valid numbers.",

@@ -1,4 +1,5 @@
 const categoryModel = require("../models/categoryModel");
+const subCategoryModel = require("../models/subCategoryModel");
 const getCategories = require("./getCategories.controller");
 // const { uploadFile } = require("../upload/upload");
 
@@ -56,17 +57,50 @@ const createCategory = async (req, res) => {
 //     });
 //   }
 // };
+// const deleteCategory = async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     const data = await categoryModel.findByIdAndDelete(id);
+//     res
+//       .status(200)
+//       .json({ success: true, message: "Data Successfully Deleted", data });
+//   } catch (err) {
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
+
 const deleteCategory = async (req, res) => {
   try {
-    const id = req.params.id;
-    const data = await categoryModel.findByIdAndDelete(id);
-    res
-      .status(200)
-      .json({ success: true, message: "Data Successfully Deleted", data });
+    const { id } = req.params;
+
+    // Check if the category exists
+    const category = await categoryModel.findById(id);
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    // Delete all subcategories associated with this category
+    await subCategoryModel.deleteMany({ category: id });
+
+    // Delete the category
+    await categoryModel.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Category and its subcategories successfully deleted",
+    });
   } catch (err) {
+    console.error("Error deleting category and its subcategories:", err);
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: "An error occurred while deleting the category",
+      error: err.message,
     });
   }
 };
@@ -93,7 +127,6 @@ const updateCategory = async (req, res) => {
   }
 };
 
-//for calculating the number of categories
 const getTotalCategoryCount = async (req, res) => {
   try {
     const totalCategories = await categoryModel.countDocuments();
@@ -114,7 +147,6 @@ const getTotalCategoryCount = async (req, res) => {
 
 module.exports = {
   createCategory,
-  // getCategory,
   deleteCategory,
   updateCategory,
   getCategories,

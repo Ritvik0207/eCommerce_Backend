@@ -46,21 +46,98 @@ const getSubCategory = async (req, res) => {
   }
 };
 
-// const getSubCategoryById = async (req, res) => {
-//   const { categoryId } = req.params;
+const updateSubCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const updatedSubCategory = await subCategoryModel.findByIdAndUpdate(
+      id,
+      updateData,
+      {
+        new: true,
+      }
+    );
+
+    if (!updatedSubCategory) {
+      return res.status(404).json({
+        success: false,
+        message: "Subcategory not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Subcategory updated successfully",
+      subcategory: updatedSubCategory,
+    });
+  } catch (error) {
+    console.error("Error updating subcategory:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while updating subcategory.",
+    });
+  }
+};
+
+// const deleteSubCategory = async (req, res) => {
 //   try {
-//     const subCategory = await subCategoryModel
-//       .findById(categoryId)
-//       .populate("subcategories")
-//       .exec();
-//     res.status(200).json(subCategory.subcategories);
-//   } catch (error) {
-//     res.status(400).json({ error: "Category not found" });
+//     const id = req.params.id;
+//     const data = await subCategoryModel.findByIdAndDelete(id);
+//     if (!data) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Subcategory not found",
+//       });
+//     }
+//     res
+//       .status(200)
+//       .json({ success: true, message: "Data Successfully Deleted", data });
+//   } catch (err) {
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
 //   }
 // };
+
+const deleteSubCategory = async (req, res) => {
+  try {
+    const { id } = req.params; // Subcategory ID from URL
+
+    // Find the subcategory to delete
+    const subCategoryToDelete = await subCategoryModel.findById(id);
+    if (!subCategoryToDelete) {
+      return res.status(404).json({
+        success: false,
+        message: "Subcategory not found",
+      });
+    }
+
+    // Remove the subcategory reference from the parent category
+    await categoryModel.findByIdAndUpdate(subCategoryToDelete.category, {
+      $pull: { subCategories: id },
+    });
+
+    // Delete the subcategory
+    await subCategoryModel.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Subcategory deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting subcategory:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting subcategory.",
+    });
+  }
+};
 
 module.exports = {
   createSubCategory,
   getSubCategory,
-  // getSubCategoryById,
+  updateSubCategory,
+  deleteSubCategory,
 };

@@ -113,7 +113,7 @@ app.use("/footerlink", footerLinkRoutes);
 app.use("/footer", footerRoutes);
 app.use("/aboutus", aboutusRoutes);
 app.use("/pricerange", pricerangeRoutes);
-// app.use("/address", addressRoutes);
+app.use("/address", addressRoutes);
 app.use(errorHandler);
 connect();
 

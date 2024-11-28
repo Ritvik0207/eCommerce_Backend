@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "Not Process",
       enum: ["Not Process", "Processing", "Shipped", "Canceled", "Delivered"],
-      required: true,
+      // required: true,
     },
     payment: {},
     payment_type: {
@@ -25,19 +25,27 @@ const orderSchema = new mongoose.Schema(
 
     product: [
       {
-        product_color: {
+        product_id: { type: mongoose.Schema.Types.ObjectId, ref: "Product" }, // Reference for dynamic fetch
+        name: {
           type: String,
           required: true,
+        }, // Embed product name
+        price: {
+          type: Number,
+          required: true,
+        }, // Embed price at purchase time
+        product_color: {
+          type: String,
+          // required: true,
         },
         product_size: {
           type: String,
-          required: true,
+          // required: true,
         },
-        product_type: {
-          type: String,
-          required: true,
+        product_quantity: {
+          type: Number,
+          //  required: true
         },
-        product_quantity: { type: Number, required: true },
       },
     ],
     address: {
@@ -49,7 +57,7 @@ const orderSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
-      city: {
+      district: {
         type: String,
         required: true,
       },
