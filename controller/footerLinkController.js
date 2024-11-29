@@ -49,7 +49,73 @@ const getFooterlink = async (req, res) => {
   }
 };
 
+const updateFooterlink = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const footerlink = await footerLinkModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    if (!footerlink) {
+      return res.status(404).json({
+        success: false,
+        message: "Footerlink not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Footerlink updated successfully",
+      footerlink: footerlink,
+    });
+  } catch (error) {
+    console.error("Error updating footerlink:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while updating footerlink.",
+    });
+  }
+};
+
+const deleteFooterlink = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const footerlinkToDelete = await footerLinkModel.findById(id);
+    if (!footerlinkToDelete) {
+      return res.status(404).json({
+        success: false,
+        message: "Footerlink not found",
+      });
+    }
+
+    await footerSubHeadingModel.findByIdAndUpdate(
+      footerlinkToDelete.footerSubHeading,
+      {
+        $pull: { footerlink: id },
+      }
+    );
+
+    await footerLinkModel.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Footerlink deleted successfully",
+      footerlinkToDelete,
+    });
+  } catch (error) {
+    console.error("Error deleting footerlink:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting footerlink.",
+    });
+  }
+};
+
 module.exports = {
   createFooterLink,
   getFooterlink,
+  updateFooterlink,
+  deleteFooterlink,
 };

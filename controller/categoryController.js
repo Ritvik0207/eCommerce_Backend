@@ -94,6 +94,7 @@ const deleteCategory = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Category and its subcategories successfully deleted",
+      category,
     });
   } catch (err) {
     console.error("Error deleting category and its subcategories:", err);

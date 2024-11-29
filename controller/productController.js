@@ -353,31 +353,116 @@ const getProductWithComments = async (req, res) => {
   }
 };
 
+// const updateProduct = async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     const { name, description, price, quantity, category } = req.body;
+//     // console.log(data);
+//     const update = await productModel.findByIdAndUpdate(
+//       id,
+//       { ...req.body },
+//       {
+//         new: true,
+//       }
+//     );
+//     res.status(201).json({
+//       success: true,
+//       message: "Data updated",
+//       update,
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
+
+// const updateProduct = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const info = req.body;
+//     const fileObject = req.file;
+//     const product = await productModel.findById(id);
+//     if (!product) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Product not found",
+//       });
+//     }
+
+//     const updatedFields = {
+//       subtitle: info.subtitle || carousel.subtitle,
+//       title: info.title || carousel.title,
+//       title2: info.title2 || carousel.title2,
+//     };
+
+//     // If a new file is provided, upload it and replace the image ID
+//     if (fileObject) {
+//       const fieldname = await uploadFile(fileObject);
+//       updatedFields.img_id = fieldname;
+//     }
+
+//     const updatedCarousel = await carouselModel.findByIdAndUpdate(
+//       id,
+//       updatedFields,
+//       {
+//         new: true, // Return the updated document
+//       }
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Carousel successfully updated",
+//       carousel: updatedCarousel,
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
+
 const updateProduct = async (req, res) => {
   try {
-    const id = req.params.id;
-    const { name, description, price, quantity, category } = req.body;
-    // console.log(data);
-    const update = await productModel.findByIdAndUpdate(
-      id,
-      { ...req.body },
-      {
-        new: true,
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    // Check for uploaded files
+    if (req.files && req.files.length > 0) {
+      const fileIds = [];
+      for (const file of req.files) {
+        const fileId = await uploadFile(file); // Implement upload logic
+        fileIds.push(fileId); // Collect uploaded file IDs
       }
+      updatedData.image_id = fileIds; // Store file IDs in the database
+    }
+
+    // Update product with the new data
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      id,
+      updatedData,
+      { new: true }
     );
-    res.status(201).json({
+
+    return res.status(200).json({
       success: true,
-      message: "Data updated",
-      update,
+      message: "Product updated successfully",
+      product: updatedProduct,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({
+    console.error("Error in updateProduct:", err);
+    return res.status(500).json({
       success: false,
-      message: err.message,
+      message: "Failed to update product",
+      error: err.message,
     });
   }
 };
+
 const updateProductFav = async (req, res) => {
   try {
     const id = req.params.id;

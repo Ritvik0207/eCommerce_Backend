@@ -27,7 +27,7 @@ route.get("/filterbyprice/:category/:discountedPrice", filterByPrice);
 route.get("/filterbyprice/:new_price", filterAllProductByPrice);
 route.get("/allproduct", getAllProduct);
 route.get("/products/:productId/comments", getProductWithComments);
-route.put("/update/:id", updateProduct);
+route.put("/update/:id", upload.array("image_id"), updateProduct);
 route.put("/updatefav/:id", updateProductFav);
 route.delete("/delete/:id", deleteProduct);
 route.get("/getOneProduct/:id", getProductById);

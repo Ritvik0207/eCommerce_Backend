@@ -71,7 +71,7 @@ const updateCarousel = async (req, res) => {
       });
     }
 
-    let updatedFields = {
+    const updatedFields = {
       subtitle: info.subtitle || carousel.subtitle,
       title: info.title || carousel.title,
       title2: info.title2 || carousel.title2,
@@ -120,6 +120,7 @@ const deleteCarousel = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Carousel successfully deleted",
+      deletedCarousel,
     });
   } catch (err) {
     console.log(err);

@@ -38,7 +38,68 @@ const getFooter = async (req, res) => {
   }
 };
 
+// Update Footer
+const updateFooter = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    const updatedFooter = await footerModel.findByIdAndUpdate(id, updatedData, {
+      new: true,
+    });
+
+    if (!updatedFooter) {
+      return res.status(404).json({
+        success: false,
+        message: "Footer not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Footer successfully updated",
+      footer: updatedFooter,
+    });
+  } catch (err) {
+    console.error("Error in updateFooter:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// Delete Footer
+const deleteFooter = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedFooter = await footerModel.findByIdAndDelete(id);
+
+    if (!deletedFooter) {
+      return res.status(404).json({
+        success: false,
+        message: "Footer not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Footer successfully deleted",
+      footer: deletedFooter,
+    });
+  } catch (err) {
+    console.error("Error in deleteFooter:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 module.exports = {
   createFooter,
   getFooter,
+  updateFooter,
+  deleteFooter,
 };

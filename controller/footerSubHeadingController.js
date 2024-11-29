@@ -43,7 +43,66 @@ const getFooterSubHeading = async (req, res) => {
   }
 };
 
+const deleteFooterSubHeading = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const footerSubHeading = await footerSubHeadingModel.findById(id);
+    if (!footerSubHeading) {
+      return res.status(404).json({
+        success: false,
+        message: "FooterSubHeading not found",
+      });
+    }
+
+    await footerSubHeadingModel.deleteMany({ footersubheading: id });
+
+    await footerSubHeadingModel.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "FooterSubHeading and its footerLink successfully deleted",
+      footerSubHeading,
+    });
+  } catch (err) {
+    console.error("Error deleting footerSubHeading and its footerLink:", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting the footerSubHeading",
+      error: err.message,
+    });
+  }
+};
+
+const updateFooterSubHeading = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const name = req.body;
+    console.log(name);
+    const footerSubHeading = await footerSubHeadingModel.findByIdAndUpdate(
+      id,
+      name,
+      {
+        new: true,
+      }
+    );
+    console.log(footerSubHeading);
+    res.status(201).json({
+      success: true,
+      message: "FooterSubHeading is updated",
+      footerSubHeading,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 module.exports = {
   createFooterSubHeading,
   getFooterSubHeading,
+  deleteFooterSubHeading,
+  updateFooterSubHeading,
 };

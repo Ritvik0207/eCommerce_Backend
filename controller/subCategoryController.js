@@ -103,9 +103,7 @@ const updateSubCategory = async (req, res) => {
 
 const deleteSubCategory = async (req, res) => {
   try {
-    const { id } = req.params; // Subcategory ID from URL
-
-    // Find the subcategory to delete
+    const { id } = req.params;
     const subCategoryToDelete = await subCategoryModel.findById(id);
     if (!subCategoryToDelete) {
       return res.status(404).json({
@@ -114,17 +112,16 @@ const deleteSubCategory = async (req, res) => {
       });
     }
 
-    // Remove the subcategory reference from the parent category
     await categoryModel.findByIdAndUpdate(subCategoryToDelete.category, {
       $pull: { subCategories: id },
     });
 
-    // Delete the subcategory
     await subCategoryModel.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,
       message: "Subcategory deleted successfully",
+      subCategoryToDelete,
     });
   } catch (error) {
     console.error("Error deleting subcategory:", error);
