@@ -1,31 +1,47 @@
 const mongoose = require("mongoose");
 
-const userSchema = mongoose.Schema({
-  role: {
-    type: String,
-    required: [true, "Role is compulsory to fill up"],
-  },
-  userName: {
-    type: String,
-    required: [true, "Name is compulsory to fill up"],
-  },
-  email: {
-    type: String,
-    required: [true, "email is compulsory to fill up"],
-  },
-  password: {
-    type: String,
-    required: [true, "Password is compulsory to fill up"],
-  },
-  address: [
-    {
+const userSchema = mongoose.Schema(
+  {
+    userName: {
+      type: String,
+      required: [true, "Name is compulsory to fill up"],
+    },
+    email: {
+      type: String,
+      required: [true, "Email is compulsory to fill up"],
+      unique: true,
+      match: [/.+@.+\..+/, "Please enter a valid email address"],
+    },
+
+    password: {
+      type: String,
+      required: [true, "Password is compulsory to fill up"],
+    },
+    address: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Address",
+      },
+    ],
+    cart: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "product",
+        },
+        quantity: {
+          type: Number,
+          default: 1, // Default to 1 if quantity isn't provided
+        },
+      },
+    ],
+    defaultAddress: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Address",
-      default_selected: Boolean,
-      required: false,
     },
-  ],
-});
+  },
+  { timestamps: true }
+);
 
 const userModel = mongoose.model("users", userSchema);
 

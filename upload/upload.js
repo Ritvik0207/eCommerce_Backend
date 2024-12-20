@@ -1,5 +1,4 @@
 const stream = require("node:stream");
-const path = require("node:path");
 const cloudinary = require("cloudinary").v2;
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
@@ -7,43 +6,43 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+/**
+ * Upload file to Cloudinary
+ * @param {Object} fileObject - The file object with a buffer and mimetype.
+ * @param {Object} options - Additional upload options (resourceType, folder, transformation).
+ * @returns {Object} - Cloudinary upload result.
+ */
+
 const uploadFile = async (fileObject, resourceType = "image") => {
   try {
-    // Ensure the file object exists and has the necessary buffer for upload
     if (!fileObject || !fileObject.buffer) {
       throw new Error("No file provided or file buffer is missing");
     }
 
-    // Prepare the file for uploading by creating a buffer stream
     const bufferStream = new stream.PassThrough();
     bufferStream.end(fileObject.buffer);
 
-    // Use Cloudinary's upload_stream method to upload the file
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: resourceType,
-
-          // folder: "optimized-images", // Optional: Specify a folder in Cloudinary
-          // transformation: [
-          //   { width: 800, crop: "limit" }, // Limit width to 800px
-          //   { quality: "auto" }, // Automatic quality optimization
-          //   { fetch_format: "auto" }, // Automatic format conversion (e.g., WebP)
-          // ],
-        }, // Uploading an image file
+          quality: "auto",
+          fetch_format: "auto",
+          width: 500,
+          // height: "auto",
+          crop: "limit",
+        },
         (error, result) => {
           if (error) {
-            reject(error); // Handle upload error
+            reject(error);
           } else {
-            resolve(result); // Resolve with Cloudinary's result
+            resolve(result);
           }
         }
       );
 
-      // Stream the buffer to Cloudinary for upload
       bufferStream.pipe(uploadStream);
     });
-    // Return the Cloudinary result, including secure_url for accessing the image
     console.log(uploadResult);
 
     return uploadResult.public_id;
@@ -54,6 +53,81 @@ const uploadFile = async (fileObject, resourceType = "image") => {
 };
 
 module.exports = { uploadFile };
+
+// const stream = require("node:stream");
+// const cloudinary = require("cloudinary").v2;
+
+// // Configure Cloudinary
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET,
+// });
+
+// /**
+//  * Upload file to Cloudinary
+//  * @param {Object} fileObject - The file object with a buffer and mimetype.
+//  * @param {Object} options - Additional upload options (resourceType, folder, transformation).
+//  * @returns {Object} - Cloudinary upload result.
+//  */
+// const uploadFile = async (fileObject, options = {}) => {
+//   try {
+//     // Validate input file
+//     if (!fileObject || !fileObject.buffer) {
+//       throw new Error("No file provided or file buffer is missing");
+//     }
+
+//     // Set default options
+//     const {
+//       resourceType = "image",
+//       folder = "uploads",
+//       transformations = {
+//         width: 500,
+//         crop: "limit",
+//         quality: "auto",
+//         fetch_format: "auto",
+//       },
+//     } = options;
+
+//     // Prepare buffer stream for upload
+//     const bufferStream = new stream.PassThrough();
+//     bufferStream.end(fileObject.buffer);
+
+//     // Upload to Cloudinary
+//     const uploadResult = await new Promise((resolve, reject) => {
+//       const uploadStream = cloudinary.uploader.upload_stream(
+//         {
+//           resource_type: resourceType,
+//           folder,
+//           ...transformations,
+//         },
+//         (error, result) => {
+//           if (error) reject(error);
+//           else resolve(result);
+//         }
+//       );
+
+//       bufferStream.pipe(uploadStream); // Pipe the buffer to Cloudinary
+//     });
+
+//     console.log("Upload successful:", uploadResult);
+
+//     // Return full upload result for flexibility
+//     return {
+//       publicId: uploadResult.public_id,
+//       secureUrl: uploadResult.secure_url,
+//       format: uploadResult.format,
+//       size: uploadResult.bytes,
+//     };
+//   } catch (error) {
+//     console.error("Error uploading file to Cloudinary:", error.message);
+//     throw new Error("File upload failed");
+//   }
+// };
+
+// module.exports = { uploadFile };
+
+//The given below code is using google drive
 
 // const { google } = require("googleapis");
 // const SCOPE = ["https://www.googleapis.com/auth/drive"];

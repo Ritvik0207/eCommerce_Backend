@@ -19,6 +19,8 @@ const footerLinkRoutes = require("./router/footerlink.routes");
 const footerRoutes = require("./router/footer.routes");
 const aboutusRoutes = require("./router/aboutus.routes");
 const pricerangeRoutes = require("./router/priceRange.routes");
+const adminRoutes = require("./router/admin.routes");
+const testRoutes = require("./upload/testupload");
 
 const cors = require("cors");
 const Razorpay = require("razorpay");
@@ -51,7 +53,7 @@ app.get("/", (req, res) => {
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
-
+// app.use(express.static);
 app.post("/order", async (req, res) => {
   try {
     console.log("Test");
@@ -105,6 +107,7 @@ app.use("/order", orderProductRoutes);
 app.use("/carousel", carouselRoutes);
 app.use("/contact", contactRoutes);
 app.use("/subCategory", subCategoryRoutes);
+// app.use("/shop", shopRoutes);
 app.use("/collection", collectionRoutes);
 app.use("/commentrating", commentRatingRoutes);
 app.use("/delivery", deliveryRoutes);
@@ -114,6 +117,8 @@ app.use("/footer", footerRoutes);
 app.use("/aboutus", aboutusRoutes);
 app.use("/pricerange", pricerangeRoutes);
 app.use("/address", addressRoutes);
+app.use("/admin", adminRoutes);
+app.use("/test", testRoutes);
 app.use(errorHandler);
 connect();
 
