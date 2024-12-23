@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const aboutusSchema = mongoose.Schema(
+const aboutusSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, "Collection name is required"],
+      required: [true, 'Collection name is required'],
     },
     subheading: {
       type: String,
@@ -16,10 +16,10 @@ const aboutusSchema = mongoose.Schema(
     },
     footerlink: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "footerLink",
+      ref: 'footerLink',
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("aboutus", aboutusSchema);
+module.exports = mongoose.model('aboutus', aboutusSchema);

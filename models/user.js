@@ -1,33 +1,40 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const userSchema = mongoose.Schema(
+// Using 'new' keyword creates a new instance/object of mongoose.Schema
+// Without 'new' keyword, mongoose.Schema would be treated as a function call
+// 'new' ensures we get a fresh Schema instance with its prototype chain
+// Without 'new', we wouldn't get proper inheritance and instance methods
+const userSchema = new mongoose.Schema(
   {
     userName: {
       type: String,
-      required: [true, "Name is compulsory to fill up"],
+      required: [true, 'Name is compulsory to fill up'],
     },
     email: {
       type: String,
-      required: [true, "Email is compulsory to fill up"],
+      required: [true, 'Email is compulsory to fill up'],
       unique: true,
-      match: [/.+@.+\..+/, "Please enter a valid email address"],
     },
-
     password: {
       type: String,
-      required: [true, "Password is compulsory to fill up"],
+      required: [true, 'Password is compulsory to fill up'],
+    },
+    phone: {
+      type: Number,
+      required: [true, 'Phone is compulsory to fill up'],
+      unique: true,
     },
     address: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Address",
+        ref: 'Address',
       },
     ],
     cart: [
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "product",
+          ref: 'product',
         },
         quantity: {
           type: Number,
@@ -37,12 +44,12 @@ const userSchema = mongoose.Schema(
     ],
     defaultAddress: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Address",
+      ref: 'Address',
     },
   },
   { timestamps: true }
 );
 
-const userModel = mongoose.model("users", userSchema);
+const userModel = mongoose.model('users', userSchema);
 
 module.exports = userModel;

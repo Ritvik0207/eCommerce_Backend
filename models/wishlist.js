@@ -1,24 +1,69 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const wishlistSchema = mongoose.Schema(
+const wishlistSchema = new Schema(
   {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
     },
-    product_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "product",
-      required: true,
-    },
-    product_variant_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "productVariants",
-      required: true,
-    },
+    items: [
+      {
+        product: {
+          type: Schema.Types.ObjectId,
+          ref: 'Product',
+          required: true,
+        },
+        addedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        notes: {
+          type: String,
+          maxLength: 500,
+        },
+      },
+    ],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
-const wishlistModel = mongoose.model("wishlists", wishlistSchema);
-module.exports = wishlistModel;
+
+// Index for faster queries
+wishlistSchema.index({ user: 1 });
+
+// Methods
+wishlistSchema.methods.addItem = async function (productId, notes) {
+  if (
+    this.items.some((item) => item.product.toString() === productId.toString())
+  ) {
+    throw new Error('Product already exists in wishlist');
+  }
+
+  this.items.push({
+    product: productId,
+    notes: notes,
+  });
+
+  return this.save();
+};
+
+wishlistSchema.methods.removeItem = async function (productId) {
+  this.items = this.items.filter(
+    (item) => item.product.toString() !== productId.toString()
+  );
+  return this.save();
+};
+
+// Static methods
+wishlistSchema.statics.findUserWishlists = function (userId) {
+  return this.find({ user: userId })
+    .populate('items.product')
+    .sort('-updatedAt');
+};
+
+const Wishlist = mongoose.model('Wishlist', wishlistSchema);
+
+module.exports = Wishlist;

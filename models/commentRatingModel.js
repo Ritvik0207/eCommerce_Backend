@@ -1,14 +1,15 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+
 const commentRatingSchema = new mongoose.Schema(
   {
     productId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "product",
+      ref: 'product',
       required: true,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+      ref: 'users',
       required: true,
     },
     title: {
@@ -22,7 +23,7 @@ const commentRatingSchema = new mongoose.Schema(
       {
         userId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "users",
+          ref: 'users',
         },
         rating: {
           type: Number,
@@ -41,6 +42,6 @@ const commentRatingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const commentRatingModel = mongoose.model("comments", commentRatingSchema);
+const commentRatingModel = mongoose.model('comments', commentRatingSchema);
 
 module.exports = commentRatingModel;
