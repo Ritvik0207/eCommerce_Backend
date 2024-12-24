@@ -1,89 +1,138 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+
 const orderSchema = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
-      required: true,
+      ref: 'users',
+      required: [true, 'User ID is required'],
     },
     amount: {
       type: Number,
-      required: true,
+      required: [true, 'Order amount is required'],
+      min: [0, 'Amount cannot be negative'],
     },
     status: {
       type: String,
-      default: "Not Process",
-      enum: ["Not Process", "Processing", "Shipped", "Canceled", "Delivered"],
-      // required: true,
+      enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+      default: 'Pending',
+      required: [true, 'Order status is required'],
     },
-    payment: {},
+    payment: {
+      transactionId: String,
+      status: {
+        type: String,
+        enum: ['Pending', 'Success', 'Failed'],
+        default: 'Pending',
+      },
+      amount: Number,
+      currency: {
+        type: String,
+        default: 'INR',
+      },
+      timestamp: Date,
+    },
     payment_type: {
       type: String,
-      enum: ["COD", "Credit Card", "Debit Card", "Net Banking", "UPI"],
-      required: true,
+      enum: [
+        'COD',
+        'Credit Card',
+        'Debit Card',
+        'Net Banking',
+        'UPI',
+        'Wallet',
+      ],
+      required: [true, 'Payment type is required'],
     },
-
-    product: [
+    products: [
       {
-        product_id: { type: mongoose.Schema.Types.ObjectId, ref: "Product" }, // Reference for dynamic fetch
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'product',
+          required: true,
+        },
+        variant: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'productVariants',
+          required: true,
+        },
         name: {
           type: String,
-          required: true,
-        }, // Embed product name
+          required: [true, 'Product name is required'],
+          trim: true,
+        },
         price: {
           type: Number,
-          required: true,
-        }, // Embed price at purchase time
-        product_color: {
-          type: String,
-          // required: true,
+          required: [true, 'Product price is required'],
+          min: [0, 'Price cannot be negative'],
         },
-        product_size: {
-          type: String,
-          // required: true,
-        },
-        product_quantity: {
+        quantity: {
           type: Number,
-          //  required: true
+          required: [true, 'Product quantity is required'],
+          min: [1, 'Quantity must be at least 1'],
         },
       },
     ],
-    address: {
-      name: {
+    shipping_address: {
+      full_name: {
         type: String,
-        required: true,
+        required: [true, 'Full name is required'],
+        trim: true,
+        maxLength: [100, 'Name cannot exceed 100 characters'],
       },
-      address: {
+      address_line1: {
         type: String,
-        required: true,
+        required: [true, 'Address line 1 is required'],
+        trim: true,
       },
-      district: {
+      address_line2: {
         type: String,
-        required: true,
-      },
-      state: {
-        type: String,
-        required: true,
-      },
-      pincode: {
-        type: Number,
-        required: true,
-      },
-      phone: {
-        type: Number,
-        required: true,
-      },
-      street: {
-        type: String,
-        required: true,
+        trim: true,
       },
       landmark: {
         type: String,
-        required: true,
+        trim: true,
+      },
+      city: {
+        type: String,
+        required: [true, 'City is required'],
+        trim: true,
+      },
+      state: {
+        type: String,
+        required: [true, 'State is required'],
+        trim: true,
+      },
+      pincode: {
+        type: String,
+        required: [true, 'Pincode is required'],
+        trim: true,
+        match: [/^[1-9][0-9]{5}$/, 'Please enter a valid 6-digit pincode'],
+      },
+      phone: {
+        type: String,
+        required: [true, 'Phone number is required'],
+        trim: true,
+        match: [/^[6-9]\d{9}$/, 'Please enter a valid 10-digit phone number'],
       },
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-module.exports = mongoose.model("Order", orderSchema);
+// Indexes for better query performance
+orderSchema.index({ user_id: 1, createdAt: -1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ 'payment.status': 1 });
+
+// Virtual for total items in order
+orderSchema.virtual('total_items').get(function () {
+  return this.products.reduce((sum, item) => sum + item.quantity, 0);
+});
+
+const Order = mongoose.model('order', orderSchema);
+module.exports = Order;

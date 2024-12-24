@@ -1,18 +1,18 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const footerLinkSchema = mongoose.Schema(
+const footerLinkSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "FooterLink name is required"],
+      required: [true, 'FooterLink name is required'],
     },
     footerSubHeading: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "footersubheading",
+      ref: 'footersubheading',
       required: true,
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("footerLink", footerLinkSchema);
+module.exports = mongoose.model('footerLink', footerLinkSchema);
