@@ -177,9 +177,14 @@ const filterAllProductByPrice = async (req, res) => {
 
 const filterByPrice = async (req, res) => {
   try {
-    const { discountedPrice = "", category = "" } = req.params;
+    const {
+      discountedPrice = "",
+      category = "",
+      subcategory = "",
+    } = req.params;
 
     console.log("Category:", category);
+    console.log("Subcategory:", subcategory);
     console.log("Price Range:", discountedPrice);
 
     if (!category) {
@@ -228,12 +233,17 @@ const filterByPrice = async (req, res) => {
 
     console.log("Category ID:", categoryProduct._id);
 
-    const products = await productModel
-      .find({
-        category: categoryProduct._id,
-        discountedPrice: { $gte: lowerPrice, $lte: upperPrice },
-      })
-      .populate("category");
+    // Query for products with optional subcategory filter
+    const query = {
+      category: categoryProduct._id,
+      discountedPrice: { $gte: lowerPrice, $lte: upperPrice },
+    };
+
+    if (subcategory) {
+      query.subcategory = new RegExp(`^${subcategory}$`, "i"); // Case-insensitive search for subcategory
+    }
+
+    const products = await productModel.find(query).populate("category");
 
     console.log("Products Found:", products);
 

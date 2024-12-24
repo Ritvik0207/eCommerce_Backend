@@ -23,7 +23,10 @@ const route = express.Router();
 const upload = multer();
 //category router
 route.post("/create", upload.array("image_id"), createProduct);
-route.get("/filterbyprice/:category/:discountedPrice", filterByPrice);
+route.get(
+  "/filterbyprice/:category/:subcategory?/:discountedPrice",
+  filterByPrice
+);
 route.get("/filterbyprice/:new_price", filterAllProductByPrice);
 route.get("/allproduct", getAllProduct);
 route.get("/products/:productId/comments", getProductWithComments);
