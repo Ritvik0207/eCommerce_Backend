@@ -14,6 +14,10 @@ const adminSchema = new mongoose.Schema(
       trim: true,
       maxLength: [50, 'Name cannot exceed 50 characters'],
     },
+    phone: {
+      type: Number,
+      trim: true,
+    },
     email: {
       type: String,
       required: [true, 'Email is required'],
