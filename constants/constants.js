@@ -10,3 +10,9 @@ export const CRAFT_TYPES = {
   TIE_DYE: 'Tie & Dye',
   OTHER: 'Other',
 };
+
+export const GENDER = {
+  MALE: 'Male',
+  FEMALE: 'Female',
+  UNISEX: 'Unisex',
+};
