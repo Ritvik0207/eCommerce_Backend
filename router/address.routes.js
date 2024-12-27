@@ -1,16 +1,28 @@
-const express = require("express");
+const express = require('express');
 const {
-  createAddress,
-  getAddress,
-  updateAddress,
+  addNewAddress,
+  getAddressByUserId,
   deleteAddress,
-} = require("../controller/address.controller");
+  updateAddress,
+  setDefaultAddress,
+} = require('../controller/address.controller');
+const authenticateCustomer = require('../middlewares/authenticateCustomer');
 
 const Route = express.Router();
 
-Route.post("/create", createAddress);
-Route.get("/get", getAddress);
-Route.put("/update/:id", updateAddress);
-Route.delete("/delete/:id", deleteAddress);
+Route.post('/addNewAddress', authenticateCustomer, addNewAddress);
+Route.get('/getAddressByUserId', authenticateCustomer, getAddressByUserId);
+// delete address by id
+Route.delete('/delete/:addressId', authenticateCustomer, deleteAddress);
+
+// update address by id
+Route.put('/update/:addressId', authenticateCustomer, updateAddress);
+
+// set default address
+Route.patch(
+  '/setDefaultAddress/:addressId',
+  authenticateCustomer,
+  setDefaultAddress
+);
 
 module.exports = Route;

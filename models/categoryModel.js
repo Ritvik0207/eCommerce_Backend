@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { GENDER } = require('../constants/constants');
 
 const categorySchema = new mongoose.Schema(
   {
@@ -20,7 +21,7 @@ const categorySchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ['Male', 'Female', 'Unisex'],
+      enum: Object.values(GENDER),
       required: [true, 'Gender is required'],
     },
     subCategories: [

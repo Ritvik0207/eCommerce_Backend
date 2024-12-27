@@ -9,7 +9,7 @@ const getCategories = asyncHandler(async (req, res) => {
   const queryObj = {};
 
   // Filter by active status
-  if (queries.isActive !== undefined) {
+  if (queries?.isActive !== undefined) {
     queryObj.isActive = queries.isActive === 'true';
   }
 
