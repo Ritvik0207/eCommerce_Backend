@@ -22,6 +22,7 @@ const aboutusRoutes = require('./router/aboutus.routes');
 const pricerangeRoutes = require('./router/priceRange.routes');
 const adminRoutes = require('./router/admin.routes');
 const testRoutes = require('./upload/testupload');
+const shopRoutes = require('./router/shop.routes.js')
 
 const cors = require('cors');
 const Razorpay = require('razorpay');
@@ -119,7 +120,7 @@ app.use('/order', orderProductRoutes);
 app.use('/carousel', carouselRoutes);
 app.use('/contact', contactRoutes);
 app.use('/subCategory', subCategoryRoutes);
-// app.use("/shop", shopRoutes);
+app.use("/shop", shopRoutes);
 app.use('/collection', collectionRoutes);
 app.use('/commentrating', commentRatingRoutes);
 app.use('/delivery', deliveryRoutes);
