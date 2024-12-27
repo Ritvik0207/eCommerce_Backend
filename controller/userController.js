@@ -1,4 +1,3 @@
-// @ts-nocheck
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
@@ -168,48 +167,6 @@ const createUser = asyncHandler(async (req, res) => {
   });
 });
 
-const addNewAddress = asyncHandler(async (req, res) => {
-  const { address, setDefault } = req.body;
-
-  // validate address fields
-  if (
-    !address.address ||
-    !address.district ||
-    !address.state ||
-    !address.pincode ||
-    !address.landmark ||
-    !address.street
-  ) {
-    res.statusCode = 400;
-    throw new Error('All address fields are required');
-  }
-
-  if (!mongoose.isValidObjectId(req.user._id)) {
-    res.statusCode = 400;
-    throw new Error('Invalid user id');
-  }
-
-  const existingUser = await User.findById(req.user._id);
-  if (!existingUser) {
-    res.statusCode = 400;
-    throw new Error('User does not exist');
-  }
-
-  const addressResponse = await createAddress({
-    user_id: req.user._id,
-    deliveredToWhom: address.deliveredToWhom || req.user.userName,
-    ...address,
-  });
-
-  existingUser.address.push(addressResponse._id);
-  if (setDefault) {
-    existingUser.defaultAddress = addressResponse._id;
-  }
-  await existingUser.save();
-  const { password: _, ...userWithoutPassword } = existingUser.toObject();
-  return res.status(201).json({ success: true, data: userWithoutPassword });
-});
-
 // const getAddressByUserId = async (req, res) => {
 //   try {
 //     const { _id } = req.body;
@@ -224,30 +181,6 @@ const addNewAddress = asyncHandler(async (req, res) => {
 //     return res.status(500).json({ success: err.message, stack: err.stack });
 //   }
 // };
-
-const getAddressByUserId = asyncHandler(async (req, res) => {
-  if (!mongoose.isValidObjectId(req.user._id)) {
-    res.statusCode = 400;
-    throw new Error('Invalid user id');
-  }
-
-  const user = await User.findById(req.user._id)
-    .populate('address')
-    .populate('defaultAddress');
-
-  if (!user) {
-    res.statusCode = 400;
-    throw new Error('User does not exist');
-  }
-
-  return res.status(200).json({
-    success: true,
-    data: {
-      addresses: user.address,
-      defaultAddress: user.defaultAddress,
-    },
-  });
-});
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -301,6 +234,18 @@ const loginUser = asyncHandler(async (req, res) => {
   });
 });
 
+const logoutUser = asyncHandler(async (req, res) => {
+  res.cookie('jwt', '', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    expires: new Date(0),
+    maxAge: 0,
+  });
+
+  return res.status(200).json({ success: true, message: 'Logout Successful' });
+});
+
 const getAllCustomers = asyncHandler(async (req, res) => {
   const data = await User.find();
   console.log(data);
@@ -326,70 +271,12 @@ const getTotalUserCount = asyncHandler(async (req, res) => {
   }
 });
 
-const addToCart = asyncHandler(async (req, res) => {
-  const { productId, quantity } = req.body;
-
-  if (!mongoose.isValidObjectId(productId)) {
-    res.statusCode = 400;
-    throw new Error('Invalid product id');
-  }
-
-  if (quantity <= 0) {
-    res.statusCode = 400;
-    throw new Error('Quantity must be greater than 0');
-  }
-
-  if (!mongoose.isValidObjectId(req.user._id)) {
-    res.statusCode = 400;
-    throw new Error('Invalid user id');
-  }
-
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    res.statusCode = 400;
-    throw new Error('User not found');
-  }
-
-  const cartItem = user.cart.find(
-    (item) => item.product.toString() === productId
-  );
-
-  if (cartItem) {
-    // Update quantity if product exists in the cart
-    cartItem.quantity = quantity;
-  } else {
-    // Add a new product to the cart
-    user.cart.push({ product: productId, quantity });
-  }
-
-  await user.save();
-  return res.status(200).json({ success: true, message: 'Cart updated' });
-});
-
-const getCart = asyncHandler(async (req, res) => {
-  if (!mongoose.isValidObjectId(req.user._id)) {
-    res.statusCode = 400;
-    throw new Error('Invalid user id');
-  }
-
-  const user = await User.findById(req.user._id).populate('cart.product');
-  if (!user) {
-    res.statusCode = 400;
-    throw new Error('User not found');
-  }
-
-  return res.status(200).json({ success: true, cart: user.cart });
-});
-
 module.exports = {
   createUser,
-  addNewAddress,
-  getAddressByUserId,
   getAllCustomers,
   loginUser,
   sendOTP,
   generateOTP,
   getTotalUserCount,
-  addToCart,
-  getCart,
+  logoutUser,
 };

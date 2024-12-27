@@ -11,6 +11,7 @@ const createAddress = async (info) => {
     phone: info?.phone || null,
     street: info.street,
     landmark: info.landmark,
+    isDefault: info.isDefault || false,
   });
 
   return {
