@@ -10,6 +10,7 @@ const userModel = require('../models/user.js');
 const asyncHandler = require('express-async-handler');
 const validator = require('validator');
 const Address = require('../models/addressModel.js');
+const { ADMIN_ROLES } = require('../constants/constants.js');
 // bcrypt.genSalt(10,(err,salt)=>{
 //   if (!err){
 //     bcrypt.hash(user.password, s  async(err,hpass)=>{
@@ -247,8 +248,16 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const getAllCustomers = asyncHandler(async (req, res) => {
-  const data = await User.find();
-  console.log(data);
+  if (ADMIN_ROLES.SUPER_ADMIN !== req?.admin?.role) {
+    res.statusCode = 403;
+    throw new Error('You are not authorized to access this route');
+  }
+
+  const data = await User.find()
+    .select('-password')
+    .populate('address')
+    .populate('cart.product');
+
   return res.status(200).json({ success: 'Get all the Data', data: data });
 });
 
