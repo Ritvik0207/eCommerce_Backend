@@ -24,3 +24,15 @@ export const GENDER = {
   FEMALE: 'Female',
   UNISEX: 'Unisex',
 };
+
+export const PAYMENT_STATUS = {
+  PENDING: 'Pending',
+  SUCCESS: 'Success',
+  FAILED: 'Failed',
+};
+
+export const PRODUCT_VARIANT_STATUS = {
+  IN_STOCK: 'in_stock',
+  OUT_OF_STOCK: 'out_of_stock',
+  LOW_STOCK: 'low_stock',
+};

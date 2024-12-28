@@ -105,15 +105,34 @@ const orderSchema = new mongoose.Schema(
       },
       pincode: {
         type: String,
-        required: [true, 'Pincode is required'],
-        trim: true,
-        match: [/^[1-9][0-9]{5}$/, 'Please enter a valid 6-digit pincode'],
+        required: [true, 'Delivery pincode is required'],
+        validate: {
+          validator: (pin) => {
+            // Imphal pincodes start with 795
+            return /^795\d{3}$/.test(pin);
+          },
+          message:
+            'Delivery is only available in Imphal, Manipur (pincode starting with 795)',
+        },
       },
       phone: {
         type: String,
         required: [true, 'Phone number is required'],
         trim: true,
         match: [/^[6-9]\d{9}$/, 'Please enter a valid 10-digit phone number'],
+      },
+    },
+    shipping_details: {
+      distance_km: {
+        type: Number,
+      },
+      shipping_charge: {
+        type: Number,
+        required: [true, 'Shipping charge is required'],
+        min: [0, 'Shipping charge cannot be negative'],
+      },
+      estimated_delivery_date: {
+        type: Date,
       },
     },
   },
