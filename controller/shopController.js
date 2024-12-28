@@ -165,16 +165,22 @@ const deleteShop = asyncHandler(async(req, res) => {
     }
 
     // delete images in cloudinary first (logo and banner)
-    if (shop.logo.url) {
+    if (shop.logo?.url) {
         const logoPublicId = shop.logo.url.split('/').pop().split('.')[0];
         await cloudinary.uploader.destroy(logoPublicId);
     }
 
-    if (shop.bannerImage.url) {
+    if (shop.bannerImage?.url) {
         const bannerPublicId = shop.bannerImage.url.split('/').pop().split('.')[0];
         await cloudinary.uploader.destroy(bannerPublicId);
     }
 
+    const admin = await adminModel.findById(shop.owner);
+    if (admin) {
+        admin.shop = null;
+        await admin.save();
+    }
+    
     await shop.deleteOne();
 
     res.status(200).json({
