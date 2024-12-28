@@ -22,7 +22,7 @@ const aboutusRoutes = require('./router/aboutus.routes');
 const pricerangeRoutes = require('./router/priceRange.routes');
 const adminRoutes = require('./router/admin.routes');
 const testRoutes = require('./upload/testupload');
-const shopRoutes = require('./router/shop.routes.js')
+const shopRoutes = require('./router/shop.routes.js');
 
 const cors = require('cors');
 const Razorpay = require('razorpay');
@@ -57,58 +57,57 @@ app.use(
 
 app.use(cookieParser());
 
-app.use(express.json());
-
 // extended:true  can handle nested objects
 // extended:false  can't handle nested objects
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('Server is running');
 });
 // app.use(express.static);
-app.post('/order', async (req, res) => {
-  try {
-    console.log('Test');
-    console.log(req.body);
-    const { buyProduct, currency, receipt } = req.body;
-    const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_SECRET,
-    });
+// app.post('/order', async (req, res) => {
+//   try {
+//     console.log('Test');
+//     console.log(req.body);
+//     const { buyProduct, currency, receipt } = req.body;
+//     const razorpay = new Razorpay({
+//       key_id: process.env.RAZORPAY_KEY_ID,
+//       key_secret: process.env.RAZORPAY_SECRET,
+//     });
 
-    const options = { amount: buyProduct * 100, currency, receipt };
-    const order = await razorpay.orders.create(options);
+//     const options = { amount: buyProduct * 100, currency, receipt };
+//     const order = await razorpay.orders.create(options);
 
-    if (!order) {
-      return res.status(500).send('Error is not a valid order');
-    }
+//     if (!order) {
+//       return res.status(500).send('Error is not a valid order');
+//     }
 
-    res.json(order);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: err.message });
-  }
-});
+//     res.json(order);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ message: err.message });
+//   }
+// });
 
-app.post('/order/validate', async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-    req.body;
+// app.post('/order/validate', async (req, res) => {
+//   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+//     req.body;
 
-  const sha = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET);
-  //order_id + "|" + razorpay_payment_id
-  sha.update(`${razorpay_order_id}|${razorpay_payment_id}`);
-  const digest = sha.digest('hex');
-  if (digest !== razorpay_signature) {
-    return res.status(400).json({ msg: 'Transaction is not legit!' });
-  }
+//   const sha = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET);
+//   //order_id + "|" + razorpay_payment_id
+//   sha.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+//   const digest = sha.digest('hex');
+//   if (digest !== razorpay_signature) {
+//     return res.status(400).json({ msg: 'Transaction is not legit!' });
+//   }
 
-  res.json({
-    msg: 'success',
-    orderId: razorpay_order_id,
-    paymentId: razorpay_payment_id,
-  });
-});
+//   res.json({
+//     msg: 'success',
+//     orderId: razorpay_order_id,
+//     paymentId: razorpay_payment_id,
+//   });
+// });
 
 app.use('/user', userRoutes);
 app.use('/category', categoryRoutes);
@@ -120,7 +119,7 @@ app.use('/order', orderProductRoutes);
 app.use('/carousel', carouselRoutes);
 app.use('/contact', contactRoutes);
 app.use('/subCategory', subCategoryRoutes);
-app.use("/shop", shopRoutes);
+app.use('/shop', shopRoutes);
 app.use('/collection', collectionRoutes);
 app.use('/commentrating', commentRatingRoutes);
 app.use('/delivery', deliveryRoutes);

@@ -10,12 +10,13 @@ const {
   logoutUser,
 } = require('../controller/userController');
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
+const authenticateAdmin = require('../middlewares/authenticateAdmin');
 
 const route = express.Router();
 
 route.post('/register', createUser); //http:localhost:3000/user/register
 // admin get all customers
-route.get('/getAllCustomers', getAllCustomers);
+route.get('/getAllCustomers', authenticateAdmin, getAllCustomers);
 route.post('/login', loginUser);
 route.post('/logout', authenticateCustomer, logoutUser);
 // Admin get total users
