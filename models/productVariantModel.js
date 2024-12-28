@@ -97,7 +97,6 @@ const productVariantSchema = new mongoose.Schema(
 );
 
 // Indexes for better query performance
-productVariantSchema.index({ 'stock.sku': 1 });
 productVariantSchema.index({ 'stock.status': 1 });
 productVariantSchema.index({ product: 1 });
 

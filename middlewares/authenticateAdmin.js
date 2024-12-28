@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 
 const authenticateAdmin = asyncHandler(async (req, res, next) => {
   const jwtToken = req.cookies?.jwt;
-
   if (!jwtToken) {
     req.admin = null;
     res.statusCode = 401;

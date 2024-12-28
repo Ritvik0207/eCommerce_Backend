@@ -179,6 +179,10 @@ productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ 'specifications.material': 1 });
 productSchema.index({ category: 1, subcategory: 1 });
 
+// Note: To get variants with find() or findById(), you need to populate:
+// await ProductModel.findById(id).populate('variants')
+// await ProductModel.find().populate('variants')
+
 const productModel = mongoose.model('product', productSchema);
 
 module.exports = productModel;
