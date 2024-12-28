@@ -9,6 +9,7 @@ const {
   getTotalAdminCount,
   signUpAsSellerAdmin,
   getTotalSellerAdminCount,
+  updateSuperAdmin,
   logoutAdmin,
 } = require('../controller/admin.controller');
 const authenticateAdmin = require('../middlewares/authenticateAdmin');
@@ -32,5 +33,6 @@ router.put('/update', authenticateAdmin, updateAdmin);
 router.delete('/delete/:adminId', authenticateAdmin, deleteAdmin);
 router.get('/all-admin-count', authenticateAdmin, getTotalAdminCount);
 router.get('/seller-admin-count', authenticateAdmin, getTotalSellerAdminCount);
+router.put('/super-admin/update',authenticateAdmin, updateSuperAdmin);
 
 module.exports = router;

@@ -287,7 +287,6 @@ const updateAdmin = asyncHandler(async (req, res) => {
   }
 
   const dataToUpdate = {
-    role: req.admin.role,
     ...updateData,
   };
 
@@ -317,6 +316,66 @@ const updateAdmin = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: 'Admin updated successfully',
+    admin: updatedAdmin,
+  });
+});
+
+//update superAdmin
+const updateSuperAdmin = asyncHandler(async (req, res) => {
+  // Check if the requesting admin is a Super Admin
+  if (req.admin.role !== ADMIN_ROLES.SUPER_ADMIN) {
+    res.statusCode = 403;
+    throw new Error('Access denied. Only Super Admins can update their own information.');
+  }
+
+  const { password, ...updateData } = req.body;
+
+  // Ensure the current logged-in admin is trying to update their own details
+  const adminId = req.admin._id.toString(); // Get the logged-in Super Admin's ID from the JWT
+
+  // Check if adminId is provided in the body, it should match the logged-in admin's ID
+  if (req.body.adminId && req.body.adminId !== adminId) {
+    res.statusCode = 403;
+    throw new Error('You are not authorized to update other Super Admins.');
+  }
+
+  // If no adminId is provided, the current logged-in admin's ID should be used
+  const adminIdToUpdate = req.body.adminId || adminId;
+
+  // Find the Super Admin to update
+  const adminToUpdate = await adminModel.findById(adminIdToUpdate);
+  if (!adminToUpdate) {
+    res.statusCode = 404;
+    throw new Error('Super Admin not found.');
+  }
+
+  // Ensure the target admin is a Super Admin
+  if (adminToUpdate.role !== ADMIN_ROLES.SUPER_ADMIN) {
+    res.statusCode = 403;
+    throw new Error('You can only update Super Admins.');
+  }
+
+  // Hash the password if provided
+  if (password) {
+    const genSalt = await bcrypt.genSalt(10);
+    updateData.password = await bcrypt.hash(password, genSalt);
+  }
+
+  // Update the admin
+  const updatedAdmin = await adminModel.findByIdAndUpdate(
+    adminIdToUpdate,
+    { ...updateData },
+    { new: true }
+  );
+
+  if (!updatedAdmin) {
+    res.statusCode = 500;
+    throw new Error('Failed to update Super Admin.');
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Super Admin updated successfully.',
     admin: updatedAdmin,
   });
 });
@@ -390,5 +449,6 @@ module.exports = {
   getTotalAdminCount,
   signUpAsSellerAdmin,
   getTotalSellerAdminCount,
+  updateSuperAdmin,
   logoutAdmin,
 };
