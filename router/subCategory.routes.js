@@ -14,7 +14,7 @@ const route = express.Router();
 route.post("/create", authenticateAdmin, createSubCategory);
 route.get("/category/:categoryId", getSubCategoryByCategoryId);
 route.get("/:subCategoryId", getSubCategoryBySubCategoryId);
-route.put("/update/:id", validateObjectId, updateSubCategory);
-route.delete("/delete/:id", validateObjectId, deleteSubCategory);
+route.put("/update/:id", authenticateAdmin, validateObjectId, updateSubCategory);
+route.delete("/delete/:id", authenticateAdmin, validateObjectId, deleteSubCategory);
 
 module.exports = route;
