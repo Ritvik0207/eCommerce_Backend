@@ -1,7 +1,7 @@
 const express = require("express");
 const {
   createProduct,
-  getAllProduct,
+  getAllProducts,
   updateProduct,
   deleteProduct,
   getProductById,
@@ -18,22 +18,24 @@ const {
   getFilteredProducts,
 } = require("../controller/productController");
 const multer = require("multer");
+const authenticateAdmin = require("../middlewares/authenticateAdmin");
 
 const route = express.Router();
 const upload = multer();
 //category router
-route.post("/create", upload.array("image_id"), createProduct);
+route.post("/create", authenticateAdmin, upload.array("image_id"), createProduct);
+route.get("/allproducts", getAllProducts);
+route.put("/update/:id", upload.array("image_id"), updateProduct);
+route.delete("/delete/:id", deleteProduct);
+route.get("/getOneProduct/:id", getProductById);
+
 route.get(
   "/filterbyprice/:category/:subcategory?/:discountedPrice",
   filterByPrice
 );
 route.get("/filterbyprice/:new_price", filterAllProductByPrice);
-route.get("/allproduct", getAllProduct);
 route.get("/products/:productId/comments", getProductWithComments);
-route.put("/update/:id", upload.array("image_id"), updateProduct);
 route.put("/updatefav/:id", updateProductFav);
-route.delete("/delete/:id", deleteProduct);
-route.get("/getOneProduct/:id", getProductById);
 route.get("/query", getProductById);
 route.post("/createProductType", createProductTypes);
 route.get("/getproductType/:types", getProductTypes);
