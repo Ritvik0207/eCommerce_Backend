@@ -1,4 +1,5 @@
 const asyncHandler = require("express-async-handler");
+const adminModel = require("../models/adminModel");
 const productModel = require("../models/productModel");
 const productVariantModel = require('../models/productVariantModel');
 const productTypesModel = require("../models/productTypesModel");
@@ -145,6 +146,200 @@ const getAllProducts = asyncHandler(async(req, res) => {
   })
 });
 
+const getProductById = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+
+  const product = await productModel
+    .findById(id)
+    .populate('category')
+    .populate('subcategory')
+    .populate('shop')
+    .populate('variants');
+
+  if (!product) {
+    res.statusCode = 404;
+    throw new Error('Product not found');
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Product successfully fetched',
+    product,
+  })
+})
+
+const updateProduct = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+
+  const existingProduct = await productModel.findById(id);
+  if (!existingProduct) {
+    res.statusCode = 404;
+    throw new Error('Product not found');
+  }
+
+  if (req.files && req.files.length > 0) {
+    const fileIds = [];
+    for (const file of req.files) {
+      const fileId = await uploadFile(file);
+      fileIds.push({
+        url: fileId,
+        altText: file.originalname,
+      })
+    }
+    updatedData.images = fileIds;
+  }
+  const updatedProduct = await productModel.findByIdAndUpdate(id, updatedData, {
+    new: true,
+    runValidators: true,
+  })
+    .populate('category')
+    .populate('subcategory', 'name')
+    .populate('shop')
+    .populate('variants');
+  
+  res.status(200).json({
+    success: true,
+    message: 'Product updated successfully',
+    product: updatedProduct,
+  })
+})
+
+const deleteProduct = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+
+  const product = await productModel.findById(id);
+
+  if (!product) {
+    res.statusCode = 404;
+    throw new Error('Product not found');
+  }
+
+  await product.deleteOne();
+
+  res.status(200).json({
+    success: true,
+    message: 'Product successfully deleted',
+  });
+})
+
+const getProductsByShopId = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+
+  const products = await productModel.find({ shop: id })
+    .populate('category')
+    .populate('subcategory')
+    .populate('shop')
+    .populate('variants');
+
+  if (products.length == 0) {
+    res.statusCode = 404;
+    throw new Error('No products found for this seller');
+  }
+
+  res.status(200).json({
+    success: true,
+    count: products.length,
+    products,
+  })
+})
+
+const getProductsBySellerId = asyncHandler(async(req, res) => {
+  const { id } = req.params;
+
+  const seller = await adminModel.findById(id);
+  if (!seller || !seller.shop) {
+    res.statusCode = 404;
+    throw new Error('Seller or shop not found');
+  }
+
+  const products = await productModel
+    .find({ shop: seller.shop })
+    .populate('category')
+    .populate('subcategory')
+    .populate('shop')
+    .populate('variants');
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      products
+    })
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const deleteProduct = async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     const cancel = await productModel.findByIdAndDelete(id);
+//     res.status(201).json({
+//       success: true,
+//       message: "Data successfully Deleted",
+//       cancel,
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
+// const updateProduct = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updatedData = req.body;
+
+//     // Check for uploaded files
+//     if (req.files && req.files.length > 0) {
+//       const fileIds = [];
+//       for (const file of req.files) {
+//         const fileId = await uploadFile(file); // Implement upload logic
+//         fileIds.push(fileId); // Collect uploaded file IDs
+//       }
+//       updatedData.image_id = fileIds; // Store file IDs in the database
+//     }
+
+//     // Update product with the new data
+//     const updatedProduct = await productModel.findByIdAndUpdate(
+//       id,
+//       updatedData,
+//       { new: true }
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Product updated successfully",
+//       product: updatedProduct,
+//     });
+//   } catch (err) {
+//     console.error("Error in updateProduct:", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to update product",
+//       error: err.message,
+//     });
+//   }
+// };
 const filterAllProductByPrice = async (req, res) => {
   try {
     const { new_price = "" } = req.params;
@@ -449,42 +644,6 @@ const getProductWithComments = async (req, res) => {
 //   }
 // };
 
-const updateProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updatedData = req.body;
-
-    // Check for uploaded files
-    if (req.files && req.files.length > 0) {
-      const fileIds = [];
-      for (const file of req.files) {
-        const fileId = await uploadFile(file); // Implement upload logic
-        fileIds.push(fileId); // Collect uploaded file IDs
-      }
-      updatedData.image_id = fileIds; // Store file IDs in the database
-    }
-
-    // Update product with the new data
-    const updatedProduct = await productModel.findByIdAndUpdate(
-      id,
-      updatedData,
-      { new: true }
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Product updated successfully",
-      product: updatedProduct,
-    });
-  } catch (err) {
-    console.error("Error in updateProduct:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update product",
-      error: err.message,
-    });
-  }
-};
 
 const updateProductFav = async (req, res) => {
   try {
@@ -512,41 +671,24 @@ const updateProductFav = async (req, res) => {
   }
 };
 
-const deleteProduct = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const cancel = await productModel.findByIdAndDelete(id);
-    res.status(201).json({
-      success: true,
-      message: "Data successfully Deleted",
-      cancel,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
 
-const getProductById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const product = await productModel.findById(id);
-    res.status(200).json({
-      success: true,
-      message: "Product succesfully fetch",
-      product,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
+// const getProductById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const product = await productModel.findById(id);
+//     res.status(200).json({
+//       success: true,
+//       message: "Product succesfully fetch",
+//       product,
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
 
 const createProductTypes = async (req, res) => {
   try {
@@ -721,6 +863,8 @@ const getFilteredProducts = async (req, res) => {
 module.exports = {
   createProduct,
   filterByPrice,
+  getProductsBySellerId,
+  getProductsByShopId,
   filterAllProductByPrice,
   getAllProducts,
   getProductWithComments,

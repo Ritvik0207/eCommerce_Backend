@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const shopModel = require('../models/shopModel');
-const productModel = require('../models/productModel')
+const productModel = require('../models/productModel');
+const adminModel = require('../models/adminModel');
 const { uploadFile } = require('../upload/upload');
 const cloudinary = require('cloudinary').v2;
 
@@ -56,6 +57,15 @@ const createShop = asyncHandler(async(req, res) => {
             website: info.website || '',
         }
     });
+
+    const admin = await adminModel.findById(info.owner);
+
+    if (!admin) {
+        res.statusCode = 404;
+        throw new Error('owner not found');
+    }
+    admin.shop = newShop._id;
+    await admin.save();
 
     res.status(201).json({
         success: true,
