@@ -202,6 +202,22 @@ const getAdmins = asyncHandler(async (req, res) => {
   });
 });
 
+// Admin logout
+const logoutAdmin = asyncHandler(async (req, res) => {
+  res.cookie('jwt', '', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    expires: new Date(0),
+    maxAge: 0,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Logout successful',
+  });
+});
+
 // Function to verify admin email via OTP
 const verifyAdminEmail = async (req, res) => {
   try {
@@ -433,5 +449,6 @@ module.exports = {
   getTotalAdminCount,
   signUpAsSellerAdmin,
   getTotalSellerAdminCount,
-  updateSuperAdmin
+  updateSuperAdmin,
+  logoutAdmin,
 };

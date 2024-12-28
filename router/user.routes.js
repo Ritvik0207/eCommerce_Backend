@@ -3,29 +3,23 @@ const OTP = require('../models/otpModel');
 const {
   createUser,
   loginUser,
-  addNewAddress,
-  getAddressByUserId,
   sendOTP,
   generateOTP,
   getTotalUserCount,
-  addToCart,
-  getCart,
   getAllCustomers,
+  logoutUser,
 } = require('../controller/userController');
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
 
 const route = express.Router();
 
 route.post('/register', createUser); //http:localhost:3000/user/register
-route.post('/addNewAddress', authenticateCustomer, addNewAddress);
-route.get('/getAddressByUserId', authenticateCustomer, getAddressByUserId); //http:localhost:3000/user/create
 // admin get all customers
 route.get('/getAllCustomers', getAllCustomers);
 route.post('/login', loginUser);
+route.post('/logout', authenticateCustomer, logoutUser);
 // Admin get total users
 route.get('/totalUsers', getTotalUserCount);
-route.post('/cart/add', authenticateCustomer, addToCart);
-route.get('/getCart', authenticateCustomer, getCart);
 
 //otp
 route.post('/sendotp', async (req, res) => {
@@ -55,4 +49,5 @@ route.post('/verifyotp', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
 module.exports = route;

@@ -1,27 +1,23 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const wishlistSchema = new Schema(
+const wishlistSchema = new mongoose.Schema(
   {
     user: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
     items: [
       {
         product: {
-          type: Schema.Types.ObjectId,
+          type: mongoose.Schema.Types.ObjectId,
           ref: 'Product',
           required: true,
         },
         addedAt: {
           type: Date,
           default: Date.now,
-        },
-        notes: {
-          type: String,
-          maxLength: 500,
         },
       },
     ],
@@ -31,39 +27,42 @@ const wishlistSchema = new Schema(
   }
 );
 
-// Index for faster queries
-wishlistSchema.index({ user: 1 });
+// Regular functions have their own 'this' binding which is determined by how they are called
+// Arrow functions inherit 'this' from the enclosing scope
+// In mongoose schema methods, we need 'this' to refer to the document instance
+// So we must use regular functions, not arrow functions
+wishlistSchema.methods = {
+  addItem: async function (productId) {
+    const exists = this.items.some(
+      (item) => item.product.toString() === productId.toString()
+    );
 
-// Methods
-wishlistSchema.methods.addItem = async function (productId, notes) {
-  if (
-    this.items.some((item) => item.product.toString() === productId.toString())
-  ) {
-    throw new Error('Product already exists in wishlist');
-  }
+    if (exists) {
+      throw new Error('Product already exists in wishlist');
+    }
 
-  this.items.push({
-    product: productId,
-    notes: notes,
-  });
+    this.items.push({ product: productId });
+    return this.save();
+  },
 
-  return this.save();
+  removeItem: async function (productId) {
+    this.items = this.items.filter(
+      (item) => item.product.toString() !== productId.toString()
+    );
+    return this.save();
+  },
 };
 
-wishlistSchema.methods.removeItem = async function (productId) {
-  this.items = this.items.filter(
-    (item) => item.product.toString() !== productId.toString()
-  );
-  return this.save();
+wishlistSchema.statics = {
+  getByUser: function (userId) {
+    // return [] if wishlist is not found
+    return this.findOne({ user: userId })
+      .populate('items.product')
+      .sort('-updatedAt')
+      .then((wishlist) => {
+        return wishlist ? wishlist.items : [];
+      });
+  },
 };
 
-// Static methods
-wishlistSchema.statics.findUserWishlists = function (userId) {
-  return this.find({ user: userId })
-    .populate('items.product')
-    .sort('-updatedAt');
-};
-
-const Wishlist = mongoose.model('Wishlist', wishlistSchema);
-
-module.exports = Wishlist;
+module.exports = mongoose.model('Wishlist', wishlistSchema);

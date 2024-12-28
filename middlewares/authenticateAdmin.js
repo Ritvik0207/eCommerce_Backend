@@ -7,6 +7,7 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
   const jwtToken = req.cookies?.jwt;
 
   if (!jwtToken) {
+    req.admin = null;
     res.statusCode = 401;
     throw new Error('Unauthorized');
   }
@@ -14,6 +15,7 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
   const decodedToken = jwt.verify(jwtToken, process.env.JWT_SECRET);
 
   if (!mongoose.isValidObjectId(decodedToken._id)) {
+    req.admin = null;
     res.statusCode = 401;
     throw new Error('Unauthorized');
   }
@@ -21,6 +23,7 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
   const admin = await adminModel.findById(decodedToken._id);
 
   if (!admin) {
+    req.admin = null;
     res.statusCode = 401;
     throw new Error('Unauthorized');
   }

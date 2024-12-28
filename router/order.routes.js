@@ -1,7 +1,16 @@
 const express = require("express");
-const { createOrder, getOrder } = require("../controller/orderController");
+const { 
+    createOrder,
+    getOrder,
+    getOrderById
+} = require("../controller/orderController");
+
+const authenticateCustomer = require("../middlewares/authenticateCustomer");
+const {validateObjectId} = require("../middlewares/validateObjectId");
+
 const route = express.Router();
-route.post("/orderCreate", createOrder);
-route.get("/getOrder", getOrder);
+route.post("/create", authenticateCustomer, createOrder);
+route.get("/getOrder", authenticateCustomer, getOrder);
+route.get("/:id", authenticateCustomer, validateObjectId, getOrderById);
 
 module.exports = route;

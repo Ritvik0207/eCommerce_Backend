@@ -9,7 +9,8 @@ const {
   getTotalAdminCount,
   signUpAsSellerAdmin,
   getTotalSellerAdminCount,
-  updateSuperAdmin
+  updateSuperAdmin,
+  logoutAdmin,
 } = require('../controller/admin.controller');
 const authenticateAdmin = require('../middlewares/authenticateAdmin');
 const router = express.Router();
@@ -21,6 +22,8 @@ router.post('/signUpAsSellerAdmin', signUpAsSellerAdmin);
 router.post('/create', authenticateAdmin, createAdmin);
 router.post('/login', loginAdmin);
 router.get('/getAllAdmins', authenticateAdmin, getAdmins);
+// admin logout
+router.post('/logout', authenticateAdmin, logoutAdmin);
 
 // TODO: do otp verification for email and then implement this
 router.post('/verify-email', authenticateAdmin, verifyAdminEmail);
