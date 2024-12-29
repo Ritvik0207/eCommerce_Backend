@@ -439,6 +439,45 @@ const getTotalSellerAdminCount = asyncHandler(async (req, res) => {
   });
 });
 
+//get seller by id
+const getSellerById = asyncHandler(async (req, res) => {
+  const { adminId } = req.params;
+  // Ensure the ID is a valid MongoDB Object ID
+  if (!mongoose.Types.ObjectId.isValid(adminId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid seller admin ID');
+  }
+  // If the logged-in admin is not a Super Admin, they can only access their own data
+  if (req.admin.role !== ADMIN_ROLES.SUPER_ADMIN && req.admin._id.toString() !== adminId) {
+    res.statusCode = 403;
+    throw new Error('You are not authorized to access this seller admin data');
+  }
+
+  // Find the seller admin by their ID
+  const sellerAdmin = await adminModel.findById(adminId);
+
+  if (!sellerAdmin) {
+    res.statusCode = 404;
+    throw new Error('Seller admin not found');
+  }
+
+  // Respond with the seller admin data, excluding sensitive fields like password
+  return res.status(200).json({
+    success: true,
+    sellerAdmin: {
+      name: sellerAdmin.name,
+      email: sellerAdmin.email,
+      phone: sellerAdmin.phone,
+      role: sellerAdmin.role,
+      shop: sellerAdmin.shop,
+      artisan: sellerAdmin.artisan,
+      isActive: sellerAdmin.isActive,
+      isVerified: sellerAdmin.isVerified,
+      lastLogin: sellerAdmin.lastLogin,
+    },
+  });
+});
+
 module.exports = {
   createAdmin,
   loginAdmin,
@@ -451,4 +490,5 @@ module.exports = {
   getTotalSellerAdminCount,
   updateSuperAdmin,
   logoutAdmin,
+  getSellerById,
 };
