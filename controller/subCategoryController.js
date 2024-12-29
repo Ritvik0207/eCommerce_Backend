@@ -1,9 +1,14 @@
+const { ADMIN_ROLES } = require("../constants/constants");
 const categoryModel = require("../models/categoryModel");
 const subCategoryModel = require("../models/subCategoryModel");
 const asyncHandler = require("express-async-handler");
 const mongoose = require("mongoose");
 
 const createSubCategory = asyncHandler(async (req, res) => {
+  if(ADMIN_ROLES.SUPER_ADMIN !== req?.admin?.role) {
+    res.statusCode = 401;
+    throw new Error("Unauthorized");
+  }
   const { name, category } = req.body;
 
   // validate required fields
@@ -108,6 +113,10 @@ const getSubCategoryBySubCategoryId = asyncHandler(async(req, res) => {
   });
 
 const updateSubCategory = asyncHandler(async(req, res) => {
+  if(ADMIN_ROLES.SUPER_ADMIN !== req?.admin?.role) {
+    res.statusCode = 401;
+    throw new Error("Unauthorized");
+  }
   const { id } = req.params;
   const { name, category, ...rest } = req.body;
 
@@ -161,6 +170,10 @@ const updateSubCategory = asyncHandler(async(req, res) => {
 })
 
 const deleteSubCategory = asyncHandler(async(req, res) => {
+  if(ADMIN_ROLES.SUPER_ADMIN !== req?.admin?.role) {
+    res.statusCode = 401;
+    throw new Error("Unauthorized");
+  }
   const { id } = req.params;
 
   const subCategory = await subCategoryModel.findById(id);
