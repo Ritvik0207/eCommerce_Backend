@@ -1,39 +1,70 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const { GENDER } = require('../constants/constants');
 
-const categorySchema = mongoose.Schema(
+const categorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Name is required"],
-      // unique: true,
+      required: [true, 'Name is required'],
+      unique: true,
+      trim: true,
+      maxLength: [50, 'Category name cannot exceed 50 characters'],
     },
-    // image: {
-    //   type: String,
-    //   required: true,
-    // },
+    description: {
+      type: String,
+      trim: true,
+      maxLength: [200, 'Description cannot exceed 200 characters'],
+    },
     isProductForKids: {
       type: Boolean,
       default: false,
     },
     gender: {
       type: String,
-      enum: ["Male", "Female", "Neutral"],
-      required: true,
+      enum: Object.values(GENDER),
+      required: [true, 'Gender is required'],
     },
     subCategories: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "subCategory",
+        ref: 'subCategory',
       },
     ],
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
+    slug: {
+      type: String,
+      unique: true,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-// categorySchema.index(
-//   { name: 1, sex: 1, isProductForKids: 1 },
-//   { unique: true }
-// );
+// Indexes for better query performance
+categorySchema.index({ name: 'text' });
+categorySchema.index({ slug: 1 });
+categorySchema.index(
+  { name: 1, gender: 1, isProductForKids: 1 },
+  { unique: true }
+);
 
-const categoryModel = mongoose.model("category", categorySchema);
+// Virtual for products count
+categorySchema.virtual('productsCount', {
+  ref: 'product',
+  localField: '_id',
+  foreignField: 'category',
+  count: true,
+});
+
+const categoryModel = mongoose.model('category', categorySchema);
 module.exports = categoryModel;

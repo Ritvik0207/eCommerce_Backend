@@ -1,15 +1,30 @@
-const express = require("express");
+const express = require('express');
 const {
   createSubCategory,
-  getSubCategory,
+  getSubCategoryByCategoryId,
+  getSubCategoryBySubCategoryId,
   updateSubCategory,
   deleteSubCategory,
-} = require("../controller/subCategoryController");
+} = require('../controller/subCategoryController');
 
-const Route = express.Router();
-Route.post("/createSubCategory", createSubCategory);
-Route.get("/:categoryId/getSubCategory", getSubCategory);
-Route.put("/update/:id", updateSubCategory);
-Route.delete("/delete/:id", deleteSubCategory);
-// Route.get("/:categoryId/getSubCategory", getSubCategoryById);
-module.exports = Route;
+const authenticateAdmin = require('../middlewares/authenticateAdmin');
+const { validateObjectId } = require('../middlewares/validateObjectId');
+
+const route = express.Router();
+route.post('/create', authenticateAdmin, createSubCategory);
+route.get('/category/:categoryId', getSubCategoryByCategoryId);
+route.put(
+  '/update/:id',
+  authenticateAdmin,
+  validateObjectId,
+  updateSubCategory
+);
+route.delete(
+  '/delete/:id',
+  authenticateAdmin,
+  validateObjectId,
+  deleteSubCategory
+);
+route.get('/subCategoryId/:subCategoryId', getSubCategoryBySubCategoryId);
+
+module.exports = route;

@@ -1,142 +1,480 @@
-const productModel = require("../models/productModel");
-const productTypesModel = require("../models/productTypesModel");
-const { uploadFile } = require("../upload/upload");
-const categoryModel = require("../models/categoryModel");
-const commentRatingModel = require("../models/commentRatingModel");
-const subCategoryModel = require("../models/subCategoryModel");
-const mongoose = require("mongoose");
+const asyncHandler = require('express-async-handler');
+const adminModel = require('../models/adminModel');
+const productModel = require('../models/productModel');
+const productVariantModel = require('../models/productVariantModel');
+const productTypesModel = require('../models/productTypesModel');
+const { uploadFile } = require('../upload/upload');
+const categoryModel = require('../models/categoryModel');
+const commentRatingModel = require('../models/commentRatingModel');
+const subCategoryModel = require('../models/subCategoryModel');
+const mongoose = require('mongoose');
 // const sharp = require("sharp");
 // const path = require("node:path");
 // const fs = require("node:fs");
 
-const createProduct = async (req, res) => {
-  try {
-    console.log("creating product");
-    const info = req.body;
-    console.log(info);
-    const { files } = req;
-    const fieldname = [];
-    for (const file of files) {
-      console.log(file);
-      const fileId = await uploadFile(file);
-      fieldname.push(fileId);
-    }
+const createProduct = asyncHandler(async (req, res) => {
+  const { name, description, category, subcategory, shop, variants, artisan } =
+    req.body;
 
-    console.log(info, fieldname);
-    const product = await productModel.create({
-      name: info.name,
-      description: info.description,
-      price: info.price,
-      discount: info.discount,
-      discountedPrice: info.discountedPrice,
-      productquantity: info.productquantity,
-      sizelength: info?.sizelength || 0,
-      sizewidth: info?.sizewidth || 0,
-      // color: info.color,
-      category: info.category,
-      image_id: fieldname,
-      subcategory: info.subcategory,
-      collection: info.collection,
-      // types: info.types,
-      isProductForKids: info.isProductForKids === "true",
-      gender: info.gender,
-      fav: info.fav,
-    });
+  const { files } = req;
 
-    res.status(201).json({
-      success: true,
-      message: "Product succesfully created",
-      product,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  if (!name || !description || !category || !shop) {
+    res.statusCode = 400;
+    throw new Error('Name, description, category, and shop are required');
   }
-};
 
-// const createProduct = async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(category)) {
+    res.status(400);
+    throw new Error('Invalid category ID');
+  }
+
+  if (subcategory && !mongoose.Types.ObjectId.isValid(subcategory)) {
+    res.status(400);
+    throw new Error('Invalid subcategory ID');
+  }
+
+  if (artisan && !mongoose.Types.ObjectId.isValid(artisan)) {
+    res.status(400);
+    throw new Error('Invalid artisan ID');
+  }
+
+  const images = [];
+  if (files && files.length > 0) {
+    for (const file of files) {
+      const fileId = await uploadFile(file);
+      images.push({
+        url: fileId,
+        altText: file.originalname,
+      });
+    }
+  }
+
+  const product = await productModel.create({
+    name,
+    description,
+    category,
+    shop,
+    images,
+    ...req.body,
+  });
+
+  // create product variants for the prouct
+  const variantList = JSON.parse(variants || '[]');
+  const createdVariants = [];
+  for (const variant of variantList) {
+    const productVariant = await productVariantModel.create({
+      product: product._id,
+      color: variant.color,
+      pattern: variant.pattern,
+      size: variant.size,
+      price: variant.price,
+      stock: variant.stock,
+      isActive: variant.isActive !== undefined ? variant.isActive : true,
+    });
+    createdVariants.push(productVariant);
+  }
+  res.status(201).json({
+    success: true,
+    message: 'Product and variants successfully created',
+    product,
+    variants: createdVariants,
+  });
+});
+
+const getAllProducts = asyncHandler(async (req, res) => {
+  const queries = req.query;
+  const queryObj = {};
+  const populateQueries = {};
+
+  // Basic filters
+  if (queries?.category) {
+    if (!mongoose.Types.ObjectId.isValid(queries.category)) {
+      res.statusCode = 400;
+      throw new Error('Invalid category ID');
+    }
+    queryObj.category = queries.category;
+  }
+  if (queries?.subcategory) {
+    if (!mongoose.Types.ObjectId.isValid(queries.subcategory)) {
+      res.statusCode = 400;
+      throw new Error('Invalid subcategory ID');
+    }
+    queryObj.subcategory = queries.subcategory;
+  }
+  if (queries?.shop) {
+    if (!mongoose.Types.ObjectId.isValid(queries.shop)) {
+      res.statusCode = 400;
+      throw new Error('Invalid shop ID');
+    }
+    queryObj.shop = queries.shop;
+  }
+
+  // Product status and visibility
+  if (queries?.status) {
+    queryObj.status = queries.status;
+  }
+  if (queries?.isVisible !== undefined) {
+    queryObj.isVisible = queries.isVisible === 'true';
+  }
+
+  // Target audience filters
+  if (queries?.gender) {
+    queryObj.gender = queries.gender;
+  }
+  if (queries?.ageGroup) {
+    queryObj.ageGroup = queries.ageGroup;
+  }
+
+  // Specifications filters
+  if (queries?.material) {
+    queryObj['specifications.material'] = queries.material;
+  }
+  if (queries?.weaveType) {
+    queryObj['specifications.weaveType'] = queries.weaveType;
+  }
+  if (queries?.craftTechnique) {
+    queryObj['specifications.craftTechnique'] = queries.craftTechnique;
+  }
+
+  // Geographic filters
+  if (queries?.region) {
+    queryObj['geographicIndication.region'] = queries.region;
+  }
+  if (queries?.state) {
+    queryObj['geographicIndication.state'] = queries.state;
+  }
+  if (queries?.isGICertified !== undefined) {
+    queryObj['geographicIndication.isGICertified'] =
+      queries.isGICertified === 'true';
+  }
+
+  // Text search on name and description
+  if (queries?.search) {
+    const searchRegex = new RegExp(queries.search, 'i');
+    queryObj.$or = [
+      { name: searchRegex },
+      { description: searchRegex },
+      { 'specifications.material': searchRegex },
+      { 'specifications.weaveType': searchRegex },
+      { 'specifications.craftTechnique': searchRegex },
+    ];
+  }
+
+  // Handle populated field queries and comparison operators
+  for (const key of Object.keys(queries)) {
+    if (key.includes('.')) {
+      const [collection, ...pathParts] = key.split('.');
+
+      // Skip if not a valid collection to query
+      if (!['variants'].includes(collection)) continue;
+
+      // Extract any comparison operator from the last part
+      const lastPart = pathParts[pathParts.length - 1];
+      const path = [...pathParts]; // Create a copy to avoid modifying original
+      let operator = '$eq';
+      let value = queries[key];
+
+      // Check for comparison operators
+      const operators = {
+        gte: '$gte',
+        lte: '$lte',
+        gt: '$gt',
+        lt: '$lt',
+        ne: '$ne',
+      };
+
+      // Check if the field name contains operator suffix (e.g. discount_gte)
+      for (const [symbol, mongoOp] of Object.entries(operators)) {
+        if (lastPart.includes(symbol)) {
+          console.log('yes');
+          // Split field name into base field and operator
+          const [baseField] = lastPart.split(symbol);
+          path[path.length - 1] = baseField.split('_')[0].trim();
+          operator = mongoOp;
+          // Convert to number only for numeric fields
+          if (
+            [
+              'price.basePrice',
+              'price.discount',
+              'price.discountedPrice',
+              'stock.quantity',
+            ].includes(path.join('.'))
+          ) {
+            value = Number(value);
+            console.log(value);
+          }
+          break;
+        }
+      }
+
+      // Initialize collection in populateQueries if needed
+      if (!populateQueries[collection]) {
+        populateQueries[collection] = { match: {} };
+      }
+
+      // Build the match condition with operator
+      populateQueries[collection].match[path.join('.')] = { [operator]: value };
+    }
+  }
+
+  // Pagination with validation
+  const page = Math.max(1, Number.parseInt(queries?.page, 10) || 1);
+  const limit = Math.min(
+    100,
+    Math.max(1, Number.parseInt(queries?.limit, 10) || 10)
+  );
+  const skip = (page - 1) * limit;
+
+  let productsQuery = productModel.find(queryObj);
+
+  // Apply population with match conditions
+  if (populateQueries.variants) {
+    productsQuery = productsQuery.populate({
+      path: 'variants',
+      match: populateQueries.variants.match,
+      options: { lean: true },
+    });
+    console.log(productsQuery);
+  } else {
+    productsQuery = productsQuery.populate('variants');
+  }
+
+  productsQuery = productsQuery
+    .populate('category')
+    .populate('subcategory')
+    .populate('shop')
+    .populate('artisan')
+    .skip(skip)
+    .limit(limit)
+    .lean(); // Use lean() for better performance
+
+  // Sorting with validation
+  const validSortFields = [
+    'createdAt',
+    'name',
+    'averageRating',
+    'totalReviews',
+  ];
+  const sortBy = validSortFields.includes(queries?.sortBy)
+    ? queries.sortBy
+    : 'createdAt';
+  const sortOrder = queries?.sortOrder === 'asc' ? 1 : -1;
+  productsQuery.sort({ [sortBy]: sortOrder });
+
+  try {
+    const [products, total] = await Promise.all([
+      productsQuery.exec(),
+      productModel.countDocuments(queryObj),
+    ]);
+
+    // Filter out products with no matching variants if variant queries exist
+    const filteredProducts = populateQueries.variants
+      ? products.filter((product) => product.variants?.length > 0)
+      : products;
+
+    const totalFilteredCount = filteredProducts.length;
+    const totalPages = Math.ceil(totalFilteredCount / limit);
+
+    res.status(200).json({
+      success: true,
+      count: totalFilteredCount,
+      total,
+      page,
+      pages: totalPages,
+      products: filteredProducts,
+    });
+  } catch (error) {
+    res.status(500);
+    throw new Error(`Error fetching products: ${error.message}`);
+  }
+});
+
+const getProductById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    res.statusCode = 400;
+    throw new Error('Invalid product Id');
+  }
+
+  const product = await productModel
+    .findById(id)
+    .populate('category')
+    .populate('subcategory')
+    .populate('shop')
+    .populate('variants');
+
+  if (!product) {
+    res.statusCode = 404;
+    throw new Error('Product not found');
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Product successfully fetched',
+    product,
+  });
+});
+
+const updateProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+
+  const existingProduct = await productModel.findById(id);
+  if (!existingProduct) {
+    res.statusCode = 404;
+    throw new Error('Product not found');
+  }
+
+  if (req.files && req.files.length > 0) {
+    const fileIds = [];
+    for (const file of req.files) {
+      const fileId = await uploadFile(file);
+      fileIds.push({
+        url: fileId,
+        altText: file.originalname,
+      });
+    }
+    updatedData.images = fileIds;
+  }
+  const updatedProduct = await productModel
+    .findByIdAndUpdate(id, updatedData, {
+      new: true,
+      runValidators: true,
+    })
+    .populate('category')
+    .populate('subcategory', 'name')
+    .populate('shop')
+    .populate('variants');
+
+  res.status(200).json({
+    success: true,
+    message: 'Product updated successfully',
+    product: updatedProduct,
+  });
+});
+
+const deleteProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const product = await productModel.findById(id);
+
+  if (!product) {
+    res.statusCode = 404;
+    throw new Error('Product not found');
+  }
+
+  await product.deleteOne();
+
+  res.status(200).json({
+    success: true,
+    message: 'Product successfully deleted',
+  });
+});
+
+const getProductsByShopId = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const products = await productModel
+    .find({ shop: id })
+    .populate('category')
+    .populate('subcategory')
+    .populate('shop')
+    .populate('variants');
+
+  if (products.length === 0) {
+    res.statusCode = 404;
+    throw new Error('No products found for this seller');
+  }
+
+  res.status(200).json({
+    success: true,
+    count: products.length,
+    products,
+  });
+});
+
+const getProductsBySellerId = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const seller = await adminModel.findById(id);
+  if (!seller || !seller.shop) {
+    res.statusCode = 404;
+    throw new Error('Seller or shop not found');
+  }
+
+  const products = await productModel
+    .find({ shop: seller.shop })
+    .populate('category')
+    .populate('subcategory')
+    .populate('shop')
+    .populate('variants');
+
+  res.status(200).json({
+    success: true,
+    count: products.length,
+    products,
+  });
+});
+
+// const deleteProduct = async (req, res) => {
 //   try {
-//     console.log("Creating product...");
-//     const info = req.body;
-//     const { files } = req;
-
-//     if (!files || files.length === 0) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "No files uploaded.",
-//       });
-//     }
-
-//     const optimizedDir = path.join(__dirname, "../uploads/optimized");
-
-//     // Ensure the optimized directory exists
-//     if (!fs.existsSync(optimizedDir)) {
-//       fs.mkdirSync(optimizedDir, { recursive: true });
-//     }
-
-//     const imagePaths = []; // Initialize an array for image paths
-
-//     for (const file of files) {
-//       const safeFileName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-
-//       const optimizedImagePath = path.join(
-//         __dirname,
-//         "../uploads/optimized",
-//         `${Date.now()}-${safeFileName}`
-//       );
-
-//       // Optimize and save the image
-//       await sharp(file.buffer)
-//         .resize(800) // Resize to 800px width while maintaining aspect ratio
-//         .webp({ quality: 80 }) // Convert to WebP with 80% quality
-//         .toFile(optimizedImagePath);
-
-//       // Push as an object with a `path` field
-//       imagePaths.push({ path: optimizedImagePath });
-//     }
-
-//     // Create the product with the properly formatted `image_id`
-//     const product = await productModel.create({
-//       name: info.name,
-//       description: info.description,
-//       price: info.price,
-//       discount: info.discount,
-//       discountedPrice: info.discountedPrice,
-//       productquantity: info.productquantity,
-//       sizelength: info?.sizelength || 0,
-//       sizewidth: info?.sizewidth || 0,
-//       category: info.category,
-//       image_id: imagePaths, // Pass the array of objects here
-//       subcategory: info.subcategory,
-//       collection: info.collection,
-//       isProductForKids: info.isProductForKids === "true",
-//       gender: info.gender,
-//       fav: info.fav,
-//     });
-
+//     const id = req.params.id;
+//     const cancel = await productModel.findByIdAndDelete(id);
 //     res.status(201).json({
 //       success: true,
-//       message: "Product successfully created with optimized images",
-//       product,
+//       message: "Data successfully Deleted",
+//       cancel,
 //     });
 //   } catch (err) {
-//     console.error("Error in createProduct:", err);
+//     console.log(err);
 //     res.status(500).json({
 //       success: false,
-//       message: "An error occurred while creating the product.",
+//       message: err.message,
+//     });
+//   }
+// };
+// const updateProduct = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updatedData = req.body;
+
+//     // Check for uploaded files
+//     if (req.files && req.files.length > 0) {
+//       const fileIds = [];
+//       for (const file of req.files) {
+//         const fileId = await uploadFile(file); // Implement upload logic
+//         fileIds.push(fileId); // Collect uploaded file IDs
+//       }
+//       updatedData.image_id = fileIds; // Store file IDs in the database
+//     }
+
+//     // Update product with the new data
+//     const updatedProduct = await productModel.findByIdAndUpdate(
+//       id,
+//       updatedData,
+//       { new: true }
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Product updated successfully",
+//       product: updatedProduct,
+//     });
+//   } catch (err) {
+//     console.error("Error in updateProduct:", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to update product",
 //       error: err.message,
 //     });
 //   }
 // };
-
 const filterAllProductByPrice = async (req, res) => {
   try {
-    const { new_price = "" } = req.params;
+    const { new_price = '' } = req.params;
 
-    const priceRange = new_price.split("-");
+    const priceRange = new_price.split('-');
     if (priceRange.length !== 2) {
       return res.status(400).json({
         success: false,
@@ -150,7 +488,7 @@ const filterAllProductByPrice = async (req, res) => {
     if (Number.isNaN(lowerPrice) || Number.isNaN(upperPrice)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid price values. Please provide valid numbers.",
+        message: 'Invalid price values. Please provide valid numbers.',
       });
     }
 
@@ -158,18 +496,18 @@ const filterAllProductByPrice = async (req, res) => {
       .find({
         new_price: { $gte: lowerPrice, $lte: upperPrice },
       })
-      .populate("category");
+      .populate('category');
 
     res.status(200).json({
       success: true,
-      message: "Products successfully fetched",
+      message: 'Products successfully fetched',
       products,
     });
   } catch (err) {
-    console.error("Error occurred in filterAllProductByPrice:", err);
+    console.error('Error occurred in filterAllProductByPrice:', err);
     res.status(500).json({
       success: false,
-      message: "An error occurred while fetching products.",
+      message: 'An error occurred while fetching products.',
       error: err.message,
     });
   }
@@ -177,18 +515,23 @@ const filterAllProductByPrice = async (req, res) => {
 
 const filterByPrice = async (req, res) => {
   try {
-    const { discountedPrice = "", category = "" } = req.params;
+    const {
+      discountedPrice = '',
+      category = '',
+      subcategory = '',
+    } = req.params;
 
-    console.log("Category:", category);
-    console.log("Price Range:", discountedPrice);
+    console.log('Category:', category);
+    console.log('Subcategory:', subcategory);
+    console.log('Price Range:', discountedPrice);
 
     if (!category) {
       return res
         .status(400)
-        .json({ success: false, message: "Category is required." });
+        .json({ success: false, message: 'Category is required.' });
     }
 
-    if (!discountedPrice.includes("-")) {
+    if (!discountedPrice.includes('-')) {
       return res.status(400).json({
         success: false,
         message:
@@ -196,12 +539,12 @@ const filterByPrice = async (req, res) => {
       });
     }
 
-    const [lowerPrice, upperPrice] = discountedPrice.split("-").map(Number);
+    const [lowerPrice, upperPrice] = discountedPrice.split('-').map(Number);
 
     if (Number.isNaN(lowerPrice) || Number.isNaN(upperPrice)) {
       return res.status(400).json({
         success: false,
-        message: "Price range must contain valid numbers.",
+        message: 'Price range must contain valid numbers.',
       });
     }
 
@@ -209,44 +552,49 @@ const filterByPrice = async (req, res) => {
 
     // Check if 'category' is a valid MongoDB ObjectId
     if (mongoose.Types.ObjectId.isValid(category)) {
-      console.log("Searching by category ID");
+      console.log('Searching by category ID');
       categoryProduct = await categoryModel.findById(category);
     } else {
-      console.log("Searching by category name");
-      const newCategory = category.replace(/([a-z])([A-Z])/g, "$1 $2").trim();
+      console.log('Searching by category name');
+      const newCategory = category.replace(/([a-z])([A-Z])/g, '$1 $2').trim();
 
       categoryProduct = await categoryModel.findOne({
-        name: new RegExp(`^${newCategory}$`, "i"),
+        name: new RegExp(`^${newCategory}$`, 'i'),
       });
     }
 
     if (!categoryProduct) {
       return res
         .status(404)
-        .json({ success: false, message: "Category not found." });
+        .json({ success: false, message: 'Category not found.' });
     }
 
-    console.log("Category ID:", categoryProduct._id);
+    console.log('Category ID:', categoryProduct._id);
 
-    const products = await productModel
-      .find({
-        category: categoryProduct._id,
-        discountedPrice: { $gte: lowerPrice, $lte: upperPrice },
-      })
-      .populate("category");
+    // Query for products with optional subcategory filter
+    const query = {
+      category: categoryProduct._id,
+      discountedPrice: { $gte: lowerPrice, $lte: upperPrice },
+    };
 
-    console.log("Products Found:", products);
+    if (subcategory) {
+      query.subcategory = new RegExp(`^${subcategory}$`, 'i'); // Case-insensitive search for subcategory
+    }
+
+    const products = await productModel.find(query).populate('category');
+
+    console.log('Products Found:', products);
 
     res.status(200).json({
       success: true,
-      message: "Products successfully fetched.",
+      message: 'Products successfully fetched.',
       products,
     });
   } catch (err) {
-    console.error("Error in filterByPrice:", err);
+    console.error('Error in filterByPrice:', err);
     res.status(500).json({
       success: false,
-      message: "An error occurred.",
+      message: 'An error occurred.',
       error: err.message,
     });
   }
@@ -270,84 +618,84 @@ const filterByPrice = async (req, res) => {
 // };
 
 // Get and filtering the products
-const getAllProduct = async (req, res) => {
-  try {
-    const { productName } = req.query;
-    const query = productName
-      ? { name: { $regex: productName, $options: "i" } }
-      : {};
-    const products = await productModel
-      .find(query)
-      .populate("category")
-      .populate("subcategory")
-      .populate("collection")
-      .sort({ createdAt: -1 });
+// const getAllProduct = async (req, res) => {
+//   try {
+//     const { productName } = req.query;
+//     const query = productName
+//       ? { name: { $regex: productName, $options: "i" } }
+//       : {};
+//     const products = await productModel
+//       .find(query)
+//       .populate("category")
+//       .populate("subcategory")
+//       .populate("collection")
+//       .sort({ createdAt: -1 });
 
-    const comments = await commentRatingModel
-      .find({ productName })
-      .populate("userId", "name");
+//     const comments = await commentRatingModel
+//       .find({ productName })
+//       .populate("userId", "name");
 
-    res.status(200).json({
-      success: true,
-      message: "Product with comments successfully fetched",
-      products,
-      comments,
-    });
-  } catch (err) {
-    console.error("Error occurred in getProductWithComments:", err);
-    res.status(500).json({
-      success: false,
-      message: "An error occurred while fetching product with comments",
-      error: err.message,
-    });
-  }
+//     res.status(200).json({
+//       success: true,
+//       message: "Product with comments successfully fetched",
+//       products,
+//       comments,
+//     });
+//   } catch (err) {
+//     console.error("Error occurred in getProductWithComments:", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "An error occurred while fetching product with comments",
+//       error: err.message,
+//     });
+//   }
 
-  //   res.status(200).json({
-  //     success: true,
-  //     message: "Products successfully fetched",
-  //     products,
-  //   });
-  // } catch (err) {
-  //   console.error(err);
-  //   res.status(500).json({
-  //     success: false,
-  //     message: "Internal server error",
-  //     error: err.message,
-  //   });
-  // }
-};
+//   //   res.status(200).json({
+//   //     success: true,
+//   //     message: "Products successfully fetched",
+//   //     products,
+//   //   });
+//   // } catch (err) {
+//   //   console.error(err);
+//   //   res.status(500).json({
+//   //     success: false,
+//   //     message: "Internal server error",
+//   //     error: err.message,
+//   //   });
+//   // }
+// };
 
 const getProductWithComments = async (req, res) => {
   try {
     const { productId } = req.params;
     const product = await productModel
       .findById(productId)
-      .populate("category")
-      .populate("collection")
-      .populate("subcategory")
+      .populate('category')
+      .populate('collection')
+      .populate('subcategory')
       .lean();
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message: 'Product not found',
       });
     }
     const comments = await commentRatingModel
       .find({ productId })
-      .populate("userId", "name");
+      .populate('userId', 'name');
     // .populate("productId");
 
     res.status(200).json({
       success: true,
-      message: "Product with comments successfully fetched",
+      message: 'Product with comments successfully fetched',
       product,
       comments,
     });
   } catch (err) {
-    console.error("Error occurred in getProductWithComments:", err);
+    console.error('Error occurred in getProductWithComments:', err);
     res.status(500).json({
       success: false,
-      message: "An error occurred while fetching product with comments.",
+      message: 'An error occurred while fetching product with comments.',
       error: err.message,
     });
   }
@@ -426,43 +774,6 @@ const getProductWithComments = async (req, res) => {
 //   }
 // };
 
-const updateProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updatedData = req.body;
-
-    // Check for uploaded files
-    if (req.files && req.files.length > 0) {
-      const fileIds = [];
-      for (const file of req.files) {
-        const fileId = await uploadFile(file); // Implement upload logic
-        fileIds.push(fileId); // Collect uploaded file IDs
-      }
-      updatedData.image_id = fileIds; // Store file IDs in the database
-    }
-
-    // Update product with the new data
-    const updatedProduct = await productModel.findByIdAndUpdate(
-      id,
-      updatedData,
-      { new: true }
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Product updated successfully",
-      product: updatedProduct,
-    });
-  } catch (err) {
-    console.error("Error in updateProduct:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update product",
-      error: err.message,
-    });
-  }
-};
-
 const updateProductFav = async (req, res) => {
   try {
     const id = req.params.id;
@@ -477,7 +788,7 @@ const updateProductFav = async (req, res) => {
     );
     res.status(201).json({
       success: true,
-      message: "Item added to wistlist",
+      message: 'Item added to wistlist',
       update,
     });
   } catch (err) {
@@ -489,54 +800,36 @@ const updateProductFav = async (req, res) => {
   }
 };
 
-const deleteProduct = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const cancel = await productModel.findByIdAndDelete(id);
-    res.status(201).json({
-      success: true,
-      message: "Data successfully Deleted",
-      cancel,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-const getProductById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const product = await productModel.findById(id);
-    res.status(200).json({
-      success: true,
-      message: "Product succesfully fetch",
-      product,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
+// const getProductById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const product = await productModel.findById(id);
+//     res.status(200).json({
+//       success: true,
+//       message: "Product succesfully fetch",
+//       product,
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
 
 const createProductTypes = async (req, res) => {
   try {
     const { types } = req.body;
     const productTypesExist = await productTypesModel.findOne({ types });
-    console.log("productTypesExist");
-    if (productTypesExist) return res.json("ProductTypes exist");
+    console.log('productTypesExist');
+    if (productTypesExist) return res.json('ProductTypes exist');
     const productTypes = await new productTypesModel({
       types,
     }).save();
     res.status(201).json({
       success: true,
-      message: "productType succesfully Added",
+      message: 'productType succesfully Added',
       productTypes,
     });
   } catch (err) {
@@ -551,10 +844,10 @@ const createProductTypes = async (req, res) => {
 const getProductTypes = async (req, res) => {
   try {
     const { types } = req.params;
-    const productType = await productModel.find({ types }).populate("types");
+    const productType = await productModel.find({ types }).populate('types');
     res.status(200).json({
       success: true,
-      message: "productType succesfully fetch",
+      message: 'productType succesfully fetch',
       productType,
     });
   } catch (err) {
@@ -577,7 +870,7 @@ const getProductsByCategoryId = async (req, res) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found.",
+        message: 'Category not found.',
       });
     }
     //{ name:"rani-phee", _id:"lsjfsd"}
@@ -588,7 +881,7 @@ const getProductsByCategoryId = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Product category succesfully fetch",
+      message: 'Product category succesfully fetch',
       products,
     });
   } catch (err) {
@@ -605,14 +898,14 @@ const getTotalProductCount = async (req, res) => {
     const totalProducts = await productModel.countDocuments();
     res.status(200).json({
       success: true,
-      message: "Total product count fetched successfully",
+      message: 'Total product count fetched successfully',
       total: totalProducts,
     });
   } catch (err) {
     console.log(err);
     res.status(500).json({
       success: false,
-      message: "Error occurred while fetching total product count",
+      message: 'Error occurred while fetching total product count',
       error: err.message,
     });
   }
@@ -626,12 +919,12 @@ const getCollectionNamesByCategoryAndSubcategory = async (req, res) => {
       query.subcategory = subcategoryId;
     }
 
-    const products = await productModel.find(query).populate("collection");
+    const products = await productModel.find(query).populate('collection');
 
     if (!products.length) {
       return res.status(404).json({
         success: false,
-        message: "No products found for the specified category and subcategory",
+        message: 'No products found for the specified category and subcategory',
       });
     }
 
@@ -643,14 +936,14 @@ const getCollectionNamesByCategoryAndSubcategory = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Collections fetched successfully",
+      message: 'Collections fetched successfully',
       collections: uniqueCollections,
     });
   } catch (err) {
-    console.error("Error in getCollectionNamesByCategoryAndSubcategory:", err);
+    console.error('Error in getCollectionNamesByCategoryAndSubcategory:', err);
     res.status(500).json({
       success: false,
-      message: "An error occurred while fetching collection names.",
+      message: 'An error occurred while fetching collection names.',
       error: err.message,
     });
   }
@@ -660,14 +953,14 @@ const getFilteredProducts = async (req, res) => {
   try {
     const { categoryId, subcategoryId, collectionName } = req.query;
 
-    console.log("Received query params:", req.query);
+    console.log('Received query params:', req.query);
 
     const query = {};
     if (categoryId) query.category = categoryId;
     if (subcategoryId) query.subcategory = subcategoryId;
 
     const products = await productModel.find(query).populate({
-      path: "collection",
+      path: 'collection',
       match: { name: collectionName },
     });
 
@@ -676,20 +969,20 @@ const getFilteredProducts = async (req, res) => {
     if (!filteredProducts.length) {
       return res.status(404).json({
         success: false,
-        message: "No products found for the selected filters.",
+        message: 'No products found for the selected filters.',
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Products successfully fetched.",
+      message: 'Products successfully fetched.',
       products: filteredProducts,
     });
   } catch (err) {
-    console.error("Error in getFilteredProducts:", err);
+    console.error('Error in getFilteredProducts:', err);
     res.status(500).json({
       success: false,
-      message: "An error occurred while fetching products.",
+      message: 'An error occurred while fetching products.',
       error: err.message,
     });
   }
@@ -698,8 +991,10 @@ const getFilteredProducts = async (req, res) => {
 module.exports = {
   createProduct,
   filterByPrice,
+  getProductsBySellerId,
+  getProductsByShopId,
   filterAllProductByPrice,
-  getAllProduct,
+  getAllProducts,
   getProductWithComments,
   updateProduct,
   updateProductFav,

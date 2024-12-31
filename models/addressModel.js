@@ -1,16 +1,14 @@
-const mongoose = require("mongoose"); // Erase if already required
+const mongoose = require('mongoose'); // Erase if already required
 
 // Declare the Schema of the Mongo model
 const AddressSchema = new mongoose.Schema({
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "users",
+    ref: 'users',
     required: true,
   },
-
-  name: {
+  deliveredToWhom: {
     type: String,
-    required: true,
   },
   address: {
     type: String,
@@ -26,11 +24,10 @@ const AddressSchema = new mongoose.Schema({
   },
   pincode: {
     type: Number,
-    required: true,
+    required: [true, 'Pincode is required and should be a number'],
   },
   phone: {
     type: Number,
-    required: true,
   },
   street: {
     type: String,
@@ -40,7 +37,11 @@ const AddressSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isDefault: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 //Export the model
-module.exports = mongoose.model("Address", AddressSchema);
+module.exports = mongoose.model('Address', AddressSchema);

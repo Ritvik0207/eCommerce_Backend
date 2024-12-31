@@ -1,46 +1,33 @@
-const addressModel = require("../models/addressModel");
+const addressModel = require('../models/addressModel');
 
 const createAddress = async (info) => {
-  try {
-    const address = await addressModel.create({
-      user_id: info.user_id,
-      name: info.name,
-      address: info.address,
-      district: info.district,
-      state: info.state,
-      pincode: info.pincode,
-      phone: info.phone,
-      street: info.street,
-      landmark: info.landmark,
-    });
-    return {
-      success: true,
-      message: "Address succesfully created",
-      ...address._doc,
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      success: false,
-      message: err.message,
-    };
-  }
+  const address = await addressModel.create({
+    user_id: info.user_id,
+    deliveredToWhom: info.deliveredToWhom,
+    address: info.address,
+    district: info.district,
+    state: info.state,
+    pincode: info.pincode,
+    phone: info?.phone || null,
+    street: info.street,
+    landmark: info.landmark,
+    isDefault: info.isDefault || false,
+  });
+
+  return {
+    success: true,
+    message: 'Address succesfully created',
+    ...address._doc,
+  };
 };
+
 const getAddress = async () => {
-  try {
-    const address = await addressModel.find();
-    return {
-      success: true,
-      message: "Address succesfully fetched",
-      address,
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      success: false,
-      message: err.message,
-    };
-  }
+  const address = await addressModel.find();
+  return {
+    success: true,
+    message: 'Address succesfully fetched',
+    address,
+  };
 };
 
 module.exports = {

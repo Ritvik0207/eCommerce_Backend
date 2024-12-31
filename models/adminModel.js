@@ -1,58 +1,65 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const { ADMIN_ROLES } = require('../constants/constants');
 
 const adminSchema = new mongoose.Schema(
   {
     role: {
       type: String,
-      enum: ["Super Admin", "Shop Seller Site Admin"],
-      required: true,
+      enum: Object.values(ADMIN_ROLES),
+      required: [true, 'Role is required'],
     },
-    personalName: {
+    name: {
       type: String,
-      required: true,
+      required: [true, 'Name is required'],
+      trim: true,
+      maxLength: [50, 'Name cannot exceed 50 characters'],
+    },
+    phone: {
+      type: Number,
+      trim: true,
     },
     email: {
       type: String,
-      required: true,
+      required: [true, 'Email is required'],
       unique: true,
+      trim: true,
+      lowercase: true,
     },
-    shopName: {
-      type: String,
-    },
-    shopAddress: {
-      type: String,
-    },
-    shopLogo: {
-      type: String,
-    },
-    businessRegistrationNumber: {
-      type: String,
-    },
-    bankDetails: {
-      bankName: { type: String, required: true },
-      accountHolderName: { type: String, required: true },
-      accountNumber: { type: String, required: true },
-      ifscCode: { type: String, required: true },
-    },
-    taxInfo: {
-      gstin: {
-        type: String,
-        required: function () {
-          return this.role === "Shop Seller Site Admin";
-        },
-      },
-      taxId: {
-        type: String,
-      },
-    },
-    isVerified: { type: Boolean, default: false },
-
     password: {
       type: String,
-      required: true,
+      required: [true, 'Password is required'],
+      select: false, // Don't return password by default in queries
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    lastLogin: {
+      type: Date,
+    },
+    artisan: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'artisan',
+    },
+    shop: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'shop',
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-module.exports = mongoose.model("admin", adminSchema);
+// Index for better query performance
+adminSchema.index({ email: 1 });
+adminSchema.index({ role: 1 });
+
+const Admin = mongoose.model('admin', adminSchema);
+module.exports = Admin;

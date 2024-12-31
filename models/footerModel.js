@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const footerSchema = mongoose.Schema(
+const footerSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, "Footer name is required"],
+      required: [true, 'Footer name is required'],
     },
     description: {
       type: String,
@@ -14,4 +14,4 @@ const footerSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("footer", footerSchema);
+module.exports = mongoose.model('footer', footerSchema);

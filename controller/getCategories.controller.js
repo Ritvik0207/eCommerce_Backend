@@ -1,63 +1,70 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const asyncHandler = require("express-async-handler");
-const categoryModel = require("../models/categoryModel");
+const asyncHandler = require('express-async-handler');
+const categoryModel = require('../models/categoryModel');
 
 const getCategories = asyncHandler(async (req, res) => {
   const queries = req.query;
+  // Build query object based on filters
+  const queryObj = {};
 
-  let categories = [];
-
-  // converting the isProductForKids to boolean
-  const isProductForKids = queries?.isProductForKids
-    ? queries.isProductForKids.toLowerCase() === "true"
-    : false;
-
-  // if the user wants to get all the categories
-  if (!queries?.sex && !isProductForKids) {
-    categories = await categoryModel.find().populate("subCategories");
+  // Filter by active status
+  if (queries?.isActive !== undefined) {
+    queryObj.isActive = queries.isActive === 'true';
   }
 
-  // if the user wants to get categories based on sex products (including children)
-  if (queries?.sex && !isProductForKids) {
-    categories = await categoryModel
-      .find({
-        sex:
-          queries.sex.charAt(0).toUpperCase() +
-          queries.sex.slice(1).toLowerCase(),
-      })
-      .populate("subCategories");
+  // Filter by gender
+  if (queries?.gender) {
+    queryObj.gender = queries.gender;
   }
 
-  // if the user wants to get categories for both male and female based on age group
-  if (!queries?.sex && queries?.isProductForKids) {
-    categories = await categoryModel
-      .find({
-        isProductForKids,
-      })
-      .populate("subCategories");
+  // Filter by kids products
+  if (queries?.isProductForKids !== undefined) {
+    queryObj.isProductForKids = queries.isProductForKids === 'true';
   }
 
-  // if the user wants to get categories only for a specific sex and age group
-  if (queries?.sex && queries?.isProductForKids) {
-    const { sex } = queries;
-
-    categories = await categoryModel
-      .find({
-        sex: sex.charAt(0).toUpperCase() + sex.slice(1).toLowerCase(),
-        isProductForKids,
-      })
-      .populate("subCategories");
+  // Text search on name
+  // In MongoDB, operators start with $ symbol
+  // $text operator enables text search across fields that have a text index
+  // $search is the text search operator that performs the actual text search
+  // This allows searching for categories by name since we created a text index on the name field
+  if (queries?.search) {
+    queryObj.$text = { $search: queries.search };
   }
 
-  if (!categories) {
-    res.statusCode = 404;
-    throw new Error("No categories found with given parameters");
+  // Pagination
+  const page = queries?.page ? Number.parseInt(queries.page) : undefined;
+  const limit = queries?.limit ? Number.parseInt(queries.limit) : undefined;
+  const skip = page ? (page - 1) * (limit || 10) : undefined;
+
+  console.log(queryObj);
+  // Build query
+  const categoriesQuery = categoryModel
+    .find(queryObj)
+    .populate('subCategories')
+    .populate('productsCount')
+    .skip(skip)
+    .limit(limit);
+
+  // Sort
+  if (queries.sort) {
+    const sortOrder = queries.sort === 'desc' ? -1 : 1;
+    categoriesQuery.sort({ displayOrder: sortOrder });
   }
 
-  res.status(200).json({
+  // Execute query
+  const [categories, total] = await Promise.all([
+    categoriesQuery.exec(),
+    categoryModel.countDocuments(queryObj),
+  ]);
+
+  // Return response
+  return res.status(200).json({
     success: true,
-    message: "Categories fetched successfully",
+    count: categories.length,
+    total,
+    page,
+    pages: Math.ceil(total / limit),
     categories,
   });
 });
