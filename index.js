@@ -23,7 +23,7 @@ const pricerangeRoutes = require("./router/priceRange.routes");
 const adminRoutes = require("./router/admin.routes");
 const testRoutes = require("./upload/testupload");
 const shopRoutes = require("./router/shop.routes.js");
-const fs = require("fs");
+const fs = require("node:fs");
 const cors = require("cors");
 const Razorpay = require("razorpay");
 const crypto = require("node:crypto");
@@ -135,13 +135,13 @@ app.use("/test", testRoutes);
 app.use(errorHandler);
 connect();
 
-const options = {
-  key: fs.readFileSync("./certificates/localhost-key.pem"),
-  cert: fs.readFileSync("./certificates/localhost.pem"),
-};
+// const options = {
+// key: fs.readFileSync("./certificates/localhost-key.pem"),
+// cert: fs.readFileSync("./certificates/localhost.pem"),
+// };
 
-const server = https.createServer(options, app);
+// const server = https.createServer(options, app);
 
-server.listen(5000, () => {
+app.listen(5000, () => {
   console.log(`Server is running on port ${PORT}`);
 });
