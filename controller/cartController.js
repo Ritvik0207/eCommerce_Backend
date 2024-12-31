@@ -5,7 +5,7 @@ const User = require('../models/user');
 const Product = require('../models/productModel');
 
 const addToCart = asyncHandler(async (req, res) => {
-  const { productId, quantity } = req.body;
+  const { productId, quantity, variantId } = req.body;
 
   if (!mongoose.isValidObjectId(productId)) {
     res.statusCode = 400;
@@ -44,7 +44,11 @@ const addToCart = asyncHandler(async (req, res) => {
     cartItem.quantity = quantity;
   } else {
     // Add a new product to the cart
-    user.cart.push({ product: productId, quantity });
+    user.cart.push({
+      product: productId,
+      quantity: quantity,
+      variantId: variantId,
+    });
   }
 
   await user.save();
@@ -66,9 +70,46 @@ const getCart = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, cart: user.cart });
 });
 
+// update cart
+const updateCart = asyncHandler(async (req, res) => {
+  const { productId, quantity, variantId } = req.body;
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.statusCode = 400;
+    throw new Error('User not found');
+  }
+  const cartItem = user.cart.find(
+    (item) => item.product.toString() === productId
+  );
+  if (!cartItem) {
+    const newCartItem = {
+      product: productId,
+      quantity: quantity,
+      variantId: variantId,
+    };
+    user.cart.push(newCartItem);
+  } else {
+    cartItem.quantity = quantity;
+  }
+  await user.save();
+  return res.status(200).json({ success: true, message: 'Cart updated' });
+});
+
+// clear cart
+const clearCart = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.statusCode = 400;
+    throw new Error('User not found');
+  }
+  user.cart = [];
+  await user.save();
+  return res.status(200).json({ success: true, message: 'Cart cleared' });
+});
+
 // remove from cart
 const removeFromCart = asyncHandler(async (req, res) => {
-  const { productId } = req.body;
+  const { productId } = req.params;
   const user = await User.findById(req.user._id);
 
   // check if product is available in the cart already
@@ -122,4 +163,6 @@ module.exports = {
   addToCart,
   getCart,
   removeFromCart,
+  updateCart,
+  clearCart,
 };

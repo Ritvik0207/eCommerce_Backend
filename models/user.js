@@ -36,6 +36,13 @@ const userSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: 'product',
         },
+        variantId: {
+          // This type definition allows the variantId field to accept either:
+          // 1. A String value
+          // 2. A MongoDB ObjectId reference to the productVariants collection
+          type: [String, mongoose.Schema.Types.ObjectId],
+          ref: 'productVariants',
+        },
         quantity: {
           type: Number,
           default: 1, // Default to 1 if quantity isn't provided

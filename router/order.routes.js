@@ -8,6 +8,7 @@ const {
   updateOrderStatus,
   deleteAllOrders,
   getShippingDetails,
+  getMyOrders,
 } = require('../controller/orderController');
 
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
@@ -31,15 +32,13 @@ router.get(
 router.put('/updateOrderStatus/:orderId', authenticateAdmin, updateOrderStatus);
 
 // get shipping details
-router.get('/getShippingDetails', authenticateCustomer, getShippingDetails);
+router.post('/getShippingDetails', authenticateCustomer, getShippingDetails);
 
 // Delete all orders [DANGEROUS]
 router.delete('/deleteAllOrders', authenticateAdmin, deleteAllOrders);
-router.get(
-  '/getOrderById/:id',
-  authenticateCustomer,
-  validateObjectId,
-  getOrderById
-);
+
+//  get my orders
+router.get('/myOrders', authenticateCustomer, getMyOrders);
+router.get('/getOrderById/:id', authenticateCustomer, getOrderById);
 
 module.exports = router;

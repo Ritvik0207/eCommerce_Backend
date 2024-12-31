@@ -5,6 +5,7 @@ const {
   deleteAddress,
   updateAddress,
   setDefaultAddress,
+  getMyAddress,
 } = require('../controller/address.controller');
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
 
@@ -24,5 +25,8 @@ Route.patch(
   authenticateCustomer,
   setDefaultAddress
 );
+
+// get my address
+Route.get('/myAddress', authenticateCustomer, getMyAddress);
 
 module.exports = Route;

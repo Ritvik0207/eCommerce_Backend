@@ -22,6 +22,7 @@ export const ORDER_STATUS = {
 export const GENDER = {
   MALE: 'Male',
   FEMALE: 'Female',
+  KIDS: 'Kids',
   UNISEX: 'Unisex',
 };
 
@@ -35,4 +36,9 @@ export const PRODUCT_VARIANT_STATUS = {
   IN_STOCK: 'in_stock',
   OUT_OF_STOCK: 'out_of_stock',
   LOW_STOCK: 'low_stock',
+};
+
+export const PAYMENT_TYPE = {
+  COD: 'COD',
+  ONLINE_PAYMENT: 'Online Payment',
 };

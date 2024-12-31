@@ -15,6 +15,10 @@ const wishlistSchema = new mongoose.Schema(
           ref: 'Product',
           required: true,
         },
+        variantId: {
+          type: [String, mongoose.Schema.Types.ObjectId],
+          ref: 'ProductVariant',
+        },
         addedAt: {
           type: Date,
           default: Date.now,
@@ -32,7 +36,7 @@ const wishlistSchema = new mongoose.Schema(
 // In mongoose schema methods, we need 'this' to refer to the document instance
 // So we must use regular functions, not arrow functions
 wishlistSchema.methods = {
-  addItem: async function (productId) {
+  addItem: async function (productId, variantId) {
     const exists = this.items.some(
       (item) => item.product.toString() === productId.toString()
     );
@@ -41,7 +45,7 @@ wishlistSchema.methods = {
       throw new Error('Product already exists in wishlist');
     }
 
-    this.items.push({ product: productId });
+    this.items.push({ product: productId, variantId: variantId });
     return this.save();
   },
 

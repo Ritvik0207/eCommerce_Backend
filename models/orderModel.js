@@ -34,14 +34,7 @@ const orderSchema = new mongoose.Schema(
     },
     payment_type: {
       type: String,
-      enum: [
-        'COD',
-        'Credit Card',
-        'Debit Card',
-        'Net Banking',
-        'UPI',
-        'Wallet',
-      ],
+      enum: ['COD', 'Online'],
       required: [true, 'Payment type is required'],
     },
     products: [
@@ -50,11 +43,12 @@ const orderSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: 'product',
           required: true,
+          autopopulate: true,
         },
         variant: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'productVariants',
-          required: true,
+          autopopulate: true,
         },
         name: {
           type: String,
@@ -151,6 +145,16 @@ orderSchema.index({ 'payment.status': 1 });
 // Virtual for total items in order
 orderSchema.virtual('total_items').get(function () {
   return this.products.reduce((sum, item) => sum + item.quantity, 0);
+});
+
+// Pre-find middleware to populate product and variant
+orderSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'products.product',
+  }).populate({
+    path: 'products.variant',
+  });
+  next();
 });
 
 const Order = mongoose.model('order', orderSchema);

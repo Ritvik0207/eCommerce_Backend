@@ -42,7 +42,10 @@ const addNewAddress = asyncHandler(async (req, res) => {
     !address.state ||
     !address.pincode ||
     !address.landmark ||
-    !address.street
+    !address.street ||
+    !address.phone ||
+    !address.city ||
+    !address.deliveredToWhom
   ) {
     res.statusCode = 400;
     throw new Error('All address fields are required');
@@ -222,6 +225,24 @@ const setDefaultAddress = asyncHandler(async (req, res) => {
   return res.status(200).json({ success: true, data: address });
 });
 
+const getMyAddress = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.user._id)) {
+    res.statusCode = 400;
+    throw new Error('Invalid user id');
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.statusCode = 400;
+    throw new Error('User not found');
+  }
+
+  const address =
+    (await Address.find({ user_id: req.user._id }).populate('user_id')) || [];
+
+  return res.status(200).json({ success: true, data: address });
+});
+
 // const getAddress = async (req, res) => {
 //   try {
 //     const address = await addressModel.find();
@@ -308,4 +329,5 @@ module.exports = {
   deleteAddress,
   updateAddress,
   setDefaultAddress,
+  getMyAddress,
 };
