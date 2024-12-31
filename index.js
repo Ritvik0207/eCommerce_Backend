@@ -23,7 +23,7 @@ const pricerangeRoutes = require('./router/priceRange.routes');
 const adminRoutes = require('./router/admin.routes');
 const testRoutes = require('./upload/testupload');
 const shopRoutes = require('./router/shop.routes.js');
-
+const fs = require('fs');
 const cors = require('cors');
 const Razorpay = require('razorpay');
 const crypto = require('node:crypto');
@@ -32,28 +32,22 @@ const { totalmem } = require('node:os');
 require('dotenv').config();
 const PORT = process.env.PORT;
 const app = express();
+const https = require('node:https');
 
-// const allowedOrigins = [
-//   "https://eyongkart.com",
-//   "https://user-site.vercel.app", // Replace with your actual Vercel URL for the user site
-//   "https://admin-site.vercel.app" // Replace with your actual Vercel URL for the admin site
-// ];
+// CORS configuration
 app.use(
   cors({
-    origin: '*',
-    credentials: true, // Allow cookies to be sent with requests
+    origin: [
+      'https://localhost:5173',
+      'https://localhost:5175',
+      'https://achaathak.com',
+      'https://www.achaathak.com',
+    ], // Specify allowed origins
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    // allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
-
-// app.use(cors({
-//   origin: (origin, callback) => {
-//     if (!origin || allowedOrigins.includes(origin)) {
-//       return callback(null, true);
-//     }
-//     callback(new Error("Not allowed by CORS"));
-//   },
-//   credentials: true,
-// }));
 
 app.use(cookieParser());
 
@@ -61,6 +55,13 @@ app.use(cookieParser());
 // extended:false  can't handle nested objects
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+const logger = (req, res, next) => {
+  console.log(`${req.method} ${req.url} ${JSON.stringify(req?.body)}`);
+  next();
+};
+
+app.use(logger);
 
 app.get('/', (req, res) => {
   res.send('Server is running');
@@ -134,6 +135,13 @@ app.use('/test', testRoutes);
 app.use(errorHandler);
 connect();
 
-app.listen(PORT, () => {
+const options = {
+  key: fs.readFileSync('./certificates/localhost-key.pem'),
+  cert: fs.readFileSync('./certificates/localhost.pem'),
+};
+
+const server = https.createServer(options, app);
+
+server.listen(5000, () => {
   console.log(`Server is running on port ${PORT}`);
 });

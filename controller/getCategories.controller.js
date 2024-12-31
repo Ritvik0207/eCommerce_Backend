@@ -37,6 +37,7 @@ const getCategories = asyncHandler(async (req, res) => {
   const limit = queries?.limit ? Number.parseInt(queries.limit) : undefined;
   const skip = page ? (page - 1) * (limit || 10) : undefined;
 
+  console.log(queryObj);
   // Build query
   const categoriesQuery = categoryModel
     .find(queryObj)

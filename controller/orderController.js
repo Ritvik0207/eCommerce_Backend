@@ -39,6 +39,8 @@ const createOrder = asyncHandler(async (req, res) => {
     quantity: product.quantity,
   }));
 
+  console.log(productIdsWithVariant, 'productIdsWithVariant');
+
   const productsAvailable = await Promise.all(
     productIdsWithVariant.map(async ({ productId, variantId, quantity }) => {
       // find the product by id and populate the variants
@@ -55,26 +57,34 @@ const createOrder = asyncHandler(async (req, res) => {
 
       // find the variant by id and check if it is in stock
       const variantExists = productExists.variants.find(
-        (v) => v._id.toString() === variantId
+        (v) => v?._id.toString() === variantId
       );
 
-      if (!variantExists)
-        return {
-          product: productExists,
-          status: 'not_found',
-          message: 'Variant not found',
-        };
+      // if (!variantExists)
+      //   return {
+      //     product: productExists,
+      //     status: 'not_found',
+      //     message: 'Variant not found',
+      //   };
 
-      if (variantExists?.stock?.status !== PRODUCT_VARIANT_STATUS.IN_STOCK)
+      if (variantExists?.stock?.status === PRODUCT_VARIANT_STATUS.OUT_OF_STOCK)
         return {
           product: productExists,
           status: 'not_found',
           message: 'Variant OUT OF STOCK',
         };
 
+      console.log(productExists, 'productExists');
+
       return {
         orderProduct: productExists,
-        variant: variantExists,
+        variant: variantExists || {
+          price: {
+            basePrice: productExists?._doc?.price,
+            discount: productExists?._doc?.discount,
+            discountedPrice: productExists?._doc?.discountedPrice,
+          },
+        },
         quantity: quantity,
       };
     })
@@ -148,12 +158,29 @@ const createOrder = asyncHandler(async (req, res) => {
   });
 
   // calculate the total amount in backend
-  const totalAmount =
-    validProducts.reduce((acc, product) => {
-      return acc + product.variant.price.discountedPrice * product.quantity;
-    }, 0) + shippingDetails.shippingCost;
+  // Calculate product total first for debugging
+  const productTotal = validProducts.reduce((acc, product) => {
+    console.log(product, 'product');
+    // Check for both new and old price structure
+    const price = product?.variant?.price?.discountedPrice;
+    if (!price) {
+      throw new Error(
+        `Could not determine price for product ${product?.orderProduct?._id}`
+      );
+    }
+    return acc + price * product.quantity;
+  }, 0);
+
+  // Log shipping cost
+  console.log('Shipping cost:', shippingDetails.shippingCost);
+
+  const totalAmount = productTotal + shippingDetails.shippingCost;
+
+  // Log final total
+  console.log('Total amount:', totalAmount);
 
   if (totalAmount !== amount) {
+    console.log(totalAmount, amount, 'totalAmount');
     res.statusCode = 400;
     throw new Error('Total amount does not match order amount');
   }
@@ -163,13 +190,20 @@ const createOrder = asyncHandler(async (req, res) => {
     amount: totalAmount,
     payment,
     payment_type,
-    products: validProducts.map((product) => ({
-      product: product.orderProduct._id,
-      variant: product.variant._id,
-      name: product.orderProduct.name,
-      price: product.variant.price.discountedPrice,
-      quantity: product.quantity,
-    })),
+    products: validProducts.map((product) => {
+      const productData = {
+        product: product.orderProduct._id,
+        name: product.orderProduct.name,
+        price: product?.variant?.price?.discountedPrice,
+        quantity: product?.quantity,
+      };
+
+      if (product.variant?._id) {
+        productData.variant = product.variant._id;
+      }
+
+      return productData;
+    }),
     shipping_address,
     shipping_details: {
       distance_km: shippingDetails.distanceInKm,
@@ -215,6 +249,27 @@ const getOrder = asyncHandler(async (req, res) => {
   });
 });
 
+const getMyOrders = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.user._id)) {
+    res.statusCode = 400;
+    throw new Error('Invalid user id');
+  }
+
+  const user = await userModel.findById(req.user._id);
+  if (!user) {
+    res.statusCode = 400;
+    throw new Error('User not found');
+  }
+
+  const orders = (await orderModel.find({ user_id: req.user._id })) || [];
+
+  res.status(200).json({
+    success: true,
+    message: 'Orders fetched successfully',
+    orders,
+  });
+});
+
 const getAllOrders = expressAsyncHandler(async (req, res) => {
   console.log(req.admin);
 
@@ -233,23 +288,39 @@ const getAllOrders = expressAsyncHandler(async (req, res) => {
 
 const getOrderById = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    res.statusCode = 400;
+    throw new Error('Invalid order Id');
+  }
+
   console.log(id);
   if (!id) {
     res.statusCode = 400;
     throw new Error('Invalid order Id');
   }
 
+  // Populate product and variant references to get their full details
+  // This is needed because the order only stores ObjectIds for products and variants
+  // By populating, we get access to all product/variant fields like name, description, etc.
   const order = await orderModel
     .findById(id)
-    .populate('products.product')
-    .populate('products.variant');
+    .populate({
+      path: 'products.product',
+    })
+    .populate({
+      path: 'products.variant',
+    })
+    .populate({
+      path: 'user_id',
+    });
 
   if (!order) {
     res.statusCode = 404;
     throw new Error('Order not found');
   }
 
-  if (!order.user_id.equals(req.user._id)) {
+  if (!order.user_id._id.equals(req.user._id)) {
     res.statusCode = 401;
     throw new Error('You are not authorized to view this order');
   }
@@ -379,4 +450,5 @@ module.exports = {
   updateOrderStatus,
   deleteAllOrders,
   getShippingDetails,
+  getMyOrders,
 };

@@ -33,7 +33,7 @@ router.post(
   createProduct
 );
 router.get('/allproducts', getAllProducts);
-router.get('/getOneProduct/:id', validateObjectId, getProductById);
+router.get('/getOneProduct/:id', getProductById);
 router.put(
   '/update/:id',
   authenticateAdmin,
