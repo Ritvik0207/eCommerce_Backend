@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { ADMIN_ROLES, GENDER } = require('../constants/constants');
 const categoryModel = require('../models/categoryModel');
 const subCategoryModel = require('../models/subCategoryModel');
-const getCategories = require('./getCategories.controller');
+const {getCategories} = require('./getCategories.controller');
 // const { uploadFile } = require("../upload/upload");
 const asyncHandler = require('express-async-handler');
 
