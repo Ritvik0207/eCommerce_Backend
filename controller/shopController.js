@@ -208,10 +208,30 @@ const getAllProducts = asyncHandler(async(req, res) => {
     })
 })
 
+//get all shops
+const getAllShops = asyncHandler(async(req,res) =>{
+    const shops = await shopModel.find({});
+    return res.status(200).json({
+    success: true,
+    shops,
+  });
+})
+
+//get shop by seller id
+const getShopBySellerId = asyncHandler(async(req,res)=>{
+    const {id} = req.params;
+    const shop = await shopModel.find({ owner: id });
+    return res.status(200).json({
+        success: true,
+        shop
+    })
+})
 module.exports = { 
     createShop, 
     updateShop, 
     getShopDetails,
     deleteShop,
-    getAllProducts
+    getAllProducts,
+    getAllShops,
+    getShopBySellerId,
 };
