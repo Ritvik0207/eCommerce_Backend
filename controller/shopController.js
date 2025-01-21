@@ -24,7 +24,7 @@ const createShop = asyncHandler(async(req, res) => {
         logoUrl = await uploadFile(files.logo[0]);
     }
 
-    if (files.bannerImageUrl) {
+    if (files.bannerImage) {
         bannerImageUrl = await uploadFile(files.bannerImage[0]);
     }
 
