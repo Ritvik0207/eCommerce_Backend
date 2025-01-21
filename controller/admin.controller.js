@@ -185,8 +185,10 @@ const loginAdmin = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: 'Login successful',
-    role: adminWithoutPassword.role,
-    id: adminWithoutPassword._id,
+    user: {
+      role: adminWithoutPassword.role,
+      id: adminWithoutPassword._id,
+    }
   });
 });
 

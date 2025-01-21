@@ -2,6 +2,20 @@ const mongoose = require('mongoose');
 
 const productVariantSchema = new mongoose.Schema(
   {
+    // images
+    images: [
+      {
+        url: {
+          type: String,
+          required: true,
+        },
+        altText: String,
+        isDefault: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
     // Color and design variations
     color: {
       name: {
