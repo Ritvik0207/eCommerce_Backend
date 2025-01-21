@@ -24,13 +24,23 @@ const multer = require('multer');
 const authenticateAdmin = require('../middlewares/authenticateAdmin');
 const { validateObjectId } = require('../middlewares/validateObjectId');
 
+// generating fields for uploading images in createProduct
+const generateVariantFields = (maxVariants = 10) => {
+  const fields = [{ name: 'baseImage', maxCount: 1 }];
+
+  for (let i = 1; i<=maxVariants; i++) {
+    fields.push({ name: `variant_${i}`, maxCount: 5 });
+  }
+  return fields;
+}
+
 const router = express.Router();
 const upload = multer();
 //category router
 router.post(
   '/create',
   authenticateAdmin,
-  upload.array('image_id'),
+  upload.fields(generateVariantFields()),
   createProduct
 );
 router.get('/allproducts', getAllProducts);

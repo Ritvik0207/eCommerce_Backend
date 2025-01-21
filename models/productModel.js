@@ -2,20 +2,17 @@ const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema(
   {
-    // Base product images
-    images: [
-      {
-        url: {
-          type: String,
-          required: true,
-        },
-        altText: String,
-        isDefault: {
-          type: Boolean,
-          default: false,
-        },
+    // Base image    
+    baseImage: {
+      url: {
+        type: String,
+        required: true,
       },
-    ],
+      altText: {
+        type: String,
+        default: 'Product image',
+      }
+    },
 
     // Basic product details
     name: {
