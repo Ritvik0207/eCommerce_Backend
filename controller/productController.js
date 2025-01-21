@@ -13,7 +13,7 @@ const mongoose = require('mongoose');
 // const fs = require("node:fs");
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, category, subcategory, shop, variants, ...rest } =
+  const { name, description, category, subcategory, shop, artisan, variants, ...rest } =
     req.body;
 
   const { files } = req;
@@ -38,49 +38,56 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new Error('Invalid artisan ID');
   }
 
-  const images = [];
-  if (files && files.length > 0) {
-    for (const file of files) {
+  if (!files || !files.baseImage || !files.baseImage[0]) {
+    res.status(400);
+    throw new Error('Base image is required');
+  }
+  const baseImageFile = files.baseImage[0];
+  const fileId = await uploadFile(baseImageFile);
+  const baseImage = {
+    url: fileId,
+    altText: baseImageFile.originalname,
+  };
+
+  // create the product with the base image
+  const product = await productModel.create({
+    name, description, category, subcategory, shop, artisan, baseImage, ...rest,
+  })
+
+  // parse the variants list
+  const variantList = JSON.parse(variants || '[]');
+  const createdVariants = [];
+
+  for (const variant of variantList) {
+    const variantKey = `variant_${variant.id}`;
+    const variantImages = files[variantKey] || [];
+    const images = [];
+
+    for (const file of variantImages) {
       const fileId = await uploadFile(file);
       images.push({
         url: fileId,
         altText: file.originalname,
       });
     }
-  }
 
-  const product = await productModel.create({
-    name,
-    description,
-    category,
-    shop,
-    images,
-    ...rest,
-  });
-
-  // create product variants for the prouct
-  const variantList = JSON.parse(variants || '[]');
-  const createdVariants = [];
-  for (const variant of variantList) {
+    // create the variant
     const productVariant = await productVariantModel.create({
       product: product._id,
       isActive: variant.isActive !== undefined ? variant.isActive : true,
+      images,
       ...variant,
-      // color: variant.color,
-      // pattern: variant.pattern,
-      // size: variant.size,
-      // price: variant.price,
-      // stock: variant.stock,
-      // isActive: variant.isActive !== undefined ? variant.isActive : true,
     });
     createdVariants.push(productVariant);
   }
+
   res.status(201).json({
     success: true,
     message: 'Product and variants successfully created',
     product,
     variants: createdVariants,
-  });
+  })
+
 });
 
 const getAllProducts = asyncHandler(async (req, res) => {
