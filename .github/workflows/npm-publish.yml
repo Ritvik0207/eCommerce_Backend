@@ -16,8 +16,5 @@ jobs:
       - run: npm i
       - name: Start/Restart PM2
         run: |
-          if pm2 describe eyongkart > /dev/null 2>&1; then
-            pm2 reload eyongkart 2>/dev/null
-          else
-            pm2 start ~/pm2-configs/production/eyongkart.ecosystem.config.js 2>/dev/null
-          fi
+           pm2 delete eyongkart-backend || true
+           pm2 start ~/pm2-configs/production/eyongkart-backend.ecosystem.config.js
