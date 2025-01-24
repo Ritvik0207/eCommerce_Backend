@@ -1,4 +1,4 @@
-const axios = require("axios");
+const axios = require('axios');
 
 class ShippingCalculator {
   /**
@@ -12,7 +12,7 @@ class ShippingCalculator {
    */
   constructor(config) {
     if (!config.googleMapsApiKey || !config.holidayApiKey) {
-      throw new Error("Missing required API keys");
+      throw new Error('Missing required API keys');
     }
 
     this.googleMapsApiKey = config.googleMapsApiKey;
@@ -31,7 +31,7 @@ class ShippingCalculator {
   async calculateDistance(origin, destination) {
     try {
       const response = await axios.get(
-        "https://maps.googleapis.com/maps/api/distancematrix/json",
+        'https://maps.googleapis.com/maps/api/distancematrix/json',
         {
           params: {
             origins: origin,
@@ -41,11 +41,11 @@ class ShippingCalculator {
         }
       );
 
-      if (response.data.status === "OK") {
+      if (response.data.status === 'OK') {
         const distance = response.data.rows[0].elements[0].distance.value;
         return distance / 1000; // Convert to kilometers
       }
-      throw new Error("Unable to calculate distance");
+      throw new Error('Unable to calculate distance');
     } catch (error) {
       throw new Error(`Distance calculation failed: ${error.message}`);
     }
@@ -58,9 +58,9 @@ class ShippingCalculator {
    * @param {string} [country='IN'] Country code
    * @returns {Promise<Array>} List of holidays
    */
-  async getHolidays(startDate, endDate, country = "IN") {
+  async getHolidays(startDate, endDate, country = 'IN') {
     try {
-      const response = await axios.get("https://holidayapi.com/v1/holidays", {
+      const response = await axios.get('https://holidayapi.com/v1/holidays', {
         params: {
           key: this.holidayApiKey,
           country,
@@ -90,7 +90,7 @@ class ShippingCalculator {
     while (current <= end) {
       if (current.getDay() !== 0 && current.getDay() !== 6) {
         const isHoliday = holidays.some(
-          (holiday) => holiday.date === current.toISOString().split("T")[0]
+          (holiday) => holiday.date === current.toISOString().split('T')[0]
         );
         if (!isHoliday) {
           businessDays++;
@@ -132,7 +132,7 @@ class ShippingCalculator {
     // Check if the calculated delivery date is a holiday and add 1 every time
     while (
       holidays.some(
-        (holiday) => holiday.date === deliveryDate.toISOString().split("T")[0]
+        (holiday) => holiday.date === deliveryDate.toISOString().split('T')[0]
       )
     ) {
       deliveryDate.setDate(deliveryDate.getDate() + 1);
@@ -154,7 +154,7 @@ class ShippingCalculator {
     origin,
     destination,
     shipmentDate,
-    country = "IN",
+    country = 'IN',
   }) {
     try {
       //   just for now return static
