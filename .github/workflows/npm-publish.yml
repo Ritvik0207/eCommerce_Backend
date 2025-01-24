@@ -16,7 +16,7 @@ jobs:
       - run: npm i
       - name: Start/Restart PM2
         run: |
-          pm2 describe eyongkart-backend > /dev/null
+          pm2 describe eyongkart-backend > /dev/null 2>&1
           if [ $? -eq 0 ]; then
             pm2 reload eyongkart-backend
           else
