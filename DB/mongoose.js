@@ -1,11 +1,13 @@
- const mongoose = require("mongoose");
-require("dotenv").config();
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 const connect = () => {
+  const encodedURI = encodeURIComponent(process.env.DATABASE_URL);
+
   mongoose
-    .connect(process.env.DATABASE_URL)
+    .connect(encodedURI)
     .then(() => {
-      console.log("Database connection success");
+      console.log('Database connection success');
     })
     .catch((err) => {
       console.log(err);
