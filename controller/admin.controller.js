@@ -175,7 +175,7 @@ const loginAdmin = asyncHandler(async (req, res) => {
   );
 
   // Set cookie
-  res.cookie('jwt', token, {
+  res.cookie('adminJwt', token, {
     httpOnly: true,
     secure: true,
     sameSite: 'none',
@@ -188,7 +188,7 @@ const loginAdmin = asyncHandler(async (req, res) => {
     user: {
       role: adminWithoutPassword.role,
       id: adminWithoutPassword._id,
-    }
+    },
   });
 });
 
@@ -208,7 +208,7 @@ const getAdmins = asyncHandler(async (req, res) => {
 
 // Admin logout
 const logoutAdmin = asyncHandler(async (req, res) => {
-  res.cookie('jwt', '', {
+  res.cookie('adminJwt', '', {
     httpOnly: true,
     secure: true,
     sameSite: 'none',
@@ -329,7 +329,9 @@ const updateSuperAdmin = asyncHandler(async (req, res) => {
   // Check if the requesting admin is a Super Admin
   if (req.admin.role !== ADMIN_ROLES.SUPER_ADMIN) {
     res.statusCode = 403;
-    throw new Error('Access denied. Only Super Admins can update their own information.');
+    throw new Error(
+      'Access denied. Only Super Admins can update their own information.'
+    );
   }
 
   const { password, ...updateData } = req.body;
@@ -452,7 +454,10 @@ const getSellerById = asyncHandler(async (req, res) => {
     throw new Error('Invalid seller admin ID');
   }
   // If the logged-in admin is not a Super Admin, they can only access their own data
-  if (req.admin.role !== ADMIN_ROLES.SUPER_ADMIN && req.admin._id.toString() !== adminId) {
+  if (
+    req.admin.role !== ADMIN_ROLES.SUPER_ADMIN &&
+    req.admin._id.toString() !== adminId
+  ) {
     res.statusCode = 403;
     throw new Error('You are not authorized to access this seller admin data');
   }

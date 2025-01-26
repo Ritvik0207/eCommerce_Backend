@@ -4,7 +4,7 @@ const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 
 const authenticateAdmin = asyncHandler(async (req, res, next) => {
-  const jwtToken = req.cookies?.jwt;
+  const jwtToken = req.cookies?.adminJwt;
   if (!jwtToken) {
     req.admin = null;
     res.statusCode = 401;
