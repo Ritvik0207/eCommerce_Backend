@@ -178,6 +178,7 @@ const loginAdmin = asyncHandler(async (req, res) => {
   res.cookie('adminJwt', token, {
     httpOnly: true,
     secure: true,
+    path: '/admin',
     sameSite: 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -211,6 +212,7 @@ const logoutAdmin = asyncHandler(async (req, res) => {
   res.cookie('adminJwt', '', {
     httpOnly: true,
     secure: true,
+    path: '/admin',
     sameSite: 'none',
     expires: new Date(0),
     maxAge: 0,
