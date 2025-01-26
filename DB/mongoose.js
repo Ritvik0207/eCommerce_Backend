@@ -2,10 +2,8 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const connect = () => {
-  const encodedURI = encodeURIComponent(process.env.DATABASE_URL);
-
   mongoose
-    .connect(encodedURI)
+    .connect(process.env.DATABASE_URL)
     .then(() => {
       console.log('Database connection success');
     })
