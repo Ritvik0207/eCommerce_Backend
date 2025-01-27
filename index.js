@@ -136,8 +136,8 @@ app.use(errorHandler);
 connect();
 
 // const options = {
-//   key: fs.readFileSync("./certificates/localhost-key.pem"),
-//   cert: fs.readFileSync("./certificates/localhost.pem"),
+//   key: fs.readFileSync('./certificates/localhost-key.pem'),
+//   cert: fs.readFileSync('./certificates/localhost.pem'),
 // };
 
 // const server = https.createServer(options, app);

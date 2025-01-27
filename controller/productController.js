@@ -13,10 +13,31 @@ const mongoose = require('mongoose');
 // const fs = require("node:fs");
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, category, subcategory, shop, artisan, variants, ...rest } =
-    req.body;
+  const {
+    name,
+    description,
+    category,
+    subcategory,
+    shop,
+    artisan,
+    variants,
+    ...rest
+  } = req.body;
 
   const { files } = req;
+
+  // since everything comes as string from frontend, we need to check if the values are falsy values like undefined, null, '', etc. which are not valid for our database
+  const falsyValues = [undefined, null, '', 'undefined', 'null'];
+
+  if (
+    falsyValues.includes(name) ||
+    falsyValues.includes(description) ||
+    falsyValues.includes(category) ||
+    falsyValues.includes(shop)
+  ) {
+    res.statusCode = 400;
+    throw new Error('Name, description, category, and shop are required');
+  }
 
   if (!name || !description || !category || !shop) {
     res.statusCode = 400;
@@ -28,12 +49,18 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new Error('Invalid category ID');
   }
 
-  if (subcategory && !mongoose.Types.ObjectId.isValid(subcategory)) {
+  if (
+    !falsyValues.includes(subcategory) &&
+    !mongoose.Types.ObjectId.isValid(subcategory)
+  ) {
     res.status(400);
     throw new Error('Invalid subcategory ID');
   }
 
-  if (artisan && !mongoose.Types.ObjectId.isValid(artisan)) {
+  if (
+    !falsyValues.includes(artisan) &&
+    !mongoose.Types.ObjectId.isValid(artisan)
+  ) {
     res.status(400);
     throw new Error('Invalid artisan ID');
   }
@@ -49,10 +76,21 @@ const createProduct = asyncHandler(async (req, res) => {
     altText: baseImageFile.originalname,
   };
 
+  const restWithoutFalsyValues = Object.fromEntries(
+    Object.entries(rest).filter(([key, value]) => !falsyValues.includes(value))
+  );
+
   // create the product with the base image
   const product = await productModel.create({
-    name, description, category, subcategory, shop, artisan, baseImage, ...rest,
-  })
+    name,
+    description,
+    category,
+    subcategory: !falsyValues.includes(subcategory) ? subcategory : null,
+    shop,
+    artisan: !falsyValues.includes(artisan) ? artisan : null,
+    baseImage,
+    ...restWithoutFalsyValues,
+  });
 
   // parse the variants list
   const variantList = JSON.parse(variants || '[]');
@@ -86,8 +124,7 @@ const createProduct = asyncHandler(async (req, res) => {
     message: 'Product and variants successfully created',
     product,
     variants: createdVariants,
-  })
-
+  });
 });
 
 const getAllProducts = asyncHandler(async (req, res) => {
