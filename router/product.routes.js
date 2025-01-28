@@ -19,6 +19,7 @@ const {
   getCollectionNamesByCategoryAndSubcategory,
   getFilteredProducts,
   getCarouselProducts,
+  changeMarkupPercentage,
 } = require('../controller/productController');
 const multer = require('multer');
 const authenticateAdmin = require('../middlewares/authenticateAdmin');
@@ -28,11 +29,11 @@ const { validateObjectId } = require('../middlewares/validateObjectId');
 const generateVariantFields = (maxVariants = 10) => {
   const fields = [{ name: 'baseImage', maxCount: 1 }];
 
-  for (let i = 1; i<=maxVariants; i++) {
+  for (let i = 1; i <= maxVariants; i++) {
     fields.push({ name: `variant_${i}`, maxCount: 5 });
   }
   return fields;
-}
+};
 
 const router = express.Router();
 const upload = multer();
@@ -91,6 +92,7 @@ router.get(
   getCollectionNamesByCategoryAndSubcategory
 );
 router.get('/collectionfiltername', getFilteredProducts);
+router.put('/changeMarkupPercentage', changeMarkupPercentage);
 
 // route.delete("/delete/:id", deleteCategory);
 // route.put("/update/:id", updateCategory);

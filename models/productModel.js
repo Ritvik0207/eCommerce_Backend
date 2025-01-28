@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema(
   {
-    // Base image    
+    // Base image
     baseImage: {
       url: {
         type: String,
@@ -11,7 +11,7 @@ const productSchema = new mongoose.Schema(
       altText: {
         type: String,
         default: 'Product image',
-      }
+      },
     },
 
     // Basic product details
@@ -147,11 +147,12 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-// Virtual for variants
+// Virtual for variants with nested virtuals
 productSchema.virtual('variants', {
   ref: 'productVariants',
   localField: '_id',
   foreignField: 'product',
+  options: { virtuals: true }, // Enable nested virtuals
 });
 
 // Index for better search performance
@@ -160,8 +161,8 @@ productSchema.index({ 'specifications.material': 1 });
 productSchema.index({ category: 1, subcategory: 1 });
 
 // Note: To get variants with find() or findById(), you need to populate:
-// await ProductModel.findById(id).populate('variants')
-// await ProductModel.find().populate('variants')
+// await ProductModel.findById(id).populate({ path: 'variants', options: { virtuals: true } })
+// await ProductModel.find().populate({ path: 'variants', options: { virtuals: true } })
 
 const productModel = mongoose.model('product', productSchema);
 

@@ -276,14 +276,16 @@ const getAllProducts = asyncHandler(async (req, res) => {
     throw new Error('Invalid pagination parameters');
   }
 
-  let productsQuery = productModel.find(queryObj);
+  let productsQuery = productModel
+    .find(queryObj)
+    .setOptions({ virtuals: true });
 
   // Apply population with match conditions
   if (populateQueries.variants) {
     productsQuery = productsQuery.populate({
       path: 'variants',
       match: populateQueries.variants.match,
-      options: { lean: true },
+      options: { lean: true, virtuals: true },
     });
   } else {
     productsQuery = productsQuery.populate('variants');
@@ -300,7 +302,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
     .sort({ _id: -1 })
     .skip(skip)
     .limit(limit)
-    .lean();
+    .lean({ virtuals: true });
 
   try {
     const products = await productsQuery.exec();
@@ -331,10 +333,11 @@ const getAllProducts = asyncHandler(async (req, res) => {
 const getCarouselProducts = asyncHandler(async (req, res) => {
   const products = await productModel
     .find()
+    .setOptions({ virtuals: true })
     .populate({
       path: 'variants',
       match: { showInCarousel: true },
-      options: { lean: true },
+      options: { lean: true, virtuals: true },
     })
     .sort({ _id: -1 });
 
@@ -359,6 +362,7 @@ const getProductById = asyncHandler(async (req, res) => {
 
   const product = await productModel
     .findById(id)
+    .setOptions({ virtuals: true })
     .populate('category')
     .populate('subcategory')
     .populate('shop')
@@ -380,7 +384,9 @@ const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updatedData = req.body;
 
-  const existingProduct = await productModel.findById(id);
+  const existingProduct = await productModel
+    .findById(id)
+    .setOptions({ virtuals: true });
   if (!existingProduct) {
     res.statusCode = 404;
     throw new Error('Product not found');
@@ -401,6 +407,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     .findByIdAndUpdate(id, updatedData, {
       new: true,
       runValidators: true,
+      virtuals: true,
     })
     .populate('category')
     .populate('subcategory', 'name')
@@ -417,7 +424,9 @@ const updateProduct = asyncHandler(async (req, res) => {
 const deleteProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const product = await productModel.findById(id);
+  const product = await productModel
+    .findById(id)
+    .setOptions({ virtuals: true });
 
   if (!product) {
     res.statusCode = 404;
@@ -437,6 +446,7 @@ const getProductsByShopId = asyncHandler(async (req, res) => {
 
   const products = await productModel
     .find({ shop: id })
+    .setOptions({ virtuals: true })
     .populate('category')
     .populate('subcategory')
     .populate('shop')
@@ -465,6 +475,7 @@ const getProductsBySellerId = asyncHandler(async (req, res) => {
 
   const products = await productModel
     .find({ shop: seller.shop })
+    .setOptions({ virtuals: true })
     .populate('category')
     .populate('subcategory')
     .populate('shop')
@@ -556,6 +567,7 @@ const filterAllProductByPrice = async (req, res) => {
       .find({
         new_price: { $gte: lowerPrice, $lte: upperPrice },
       })
+      .setOptions({ virtuals: true })
       .populate('category');
 
     res.status(200).json({
@@ -641,7 +653,10 @@ const filterByPrice = async (req, res) => {
       query.subcategory = new RegExp(`^${subcategory}$`, 'i'); // Case-insensitive search for subcategory
     }
 
-    const products = await productModel.find(query).populate('category');
+    const products = await productModel
+      .find(query)
+      .setOptions({ virtuals: true })
+      .populate('category');
 
     console.log('Products Found:', products);
 
@@ -730,6 +745,7 @@ const getProductWithComments = async (req, res) => {
     const { productId } = req.params;
     const product = await productModel
       .findById(productId)
+      .setOptions({ virtuals: true })
       .populate('category')
       .populate('collection')
       .populate('subcategory')
@@ -844,6 +860,7 @@ const updateProductFav = async (req, res) => {
       { fav },
       {
         new: true,
+        virtuals: true,
       }
     );
     res.status(201).json({
@@ -904,7 +921,10 @@ const createProductTypes = async (req, res) => {
 const getProductTypes = async (req, res) => {
   try {
     const { types } = req.params;
-    const productType = await productModel.find({ types }).populate('types');
+    const productType = await productModel
+      .find({ types })
+      .setOptions({ virtuals: true })
+      .populate('types');
     res.status(200).json({
       success: true,
       message: 'productType succesfully fetch',
@@ -934,7 +954,9 @@ const getProductsByCategoryId = async (req, res) => {
       });
     }
     //{ name:"rani-phee", _id:"lsjfsd"}
-    const products = await productModel.find({ category: id });
+    const products = await productModel
+      .find({ category: id })
+      .setOptions({ virtuals: true });
     // console.log(decodedName);
     // console.log(category);
     // console.log(product);

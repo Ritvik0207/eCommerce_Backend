@@ -135,13 +135,19 @@ app.use('/test', testRoutes);
 app.use(errorHandler);
 connect();
 
-// const options = {
-//   key: fs.readFileSync('./certificates/localhost-key.pem'),
-//   cert: fs.readFileSync('./certificates/localhost.pem'),
-// };
+if (process.env.NODE_ENV !== 'production') {
+  const options = {
+    key: fs.readFileSync('./certificates/localhost-key.pem'),
+    cert: fs.readFileSync('./certificates/localhost.pem'),
+  };
 
-// const server = https.createServer(options, app);
+  const server = https.createServer(options, app);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+} else {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
