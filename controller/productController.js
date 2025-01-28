@@ -1048,6 +1048,23 @@ const getFilteredProducts = async (req, res) => {
   }
 };
 
+const changeMarkupAndUpdateAllPrices = asyncHandler(async (req, res) => {
+  const markupPercentage = req.body.markupPercentage || 15;
+
+  const products = await productModel.find({});
+  for (const product of products) {
+    const variants = await productVariantModel.find({ product: product._id });
+    for (const variant of variants) {
+      variant.price.markup = markupPercentage;
+      await variant.save();
+    }
+  }
+  res.status(200).json({
+    success: true,
+    message: 'Markup updated successfully',
+  });
+});
+
 module.exports = {
   createProduct,
   filterByPrice,

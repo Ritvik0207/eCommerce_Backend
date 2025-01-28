@@ -69,37 +69,11 @@ const productVariantSchema = new mongoose.Schema(
         default: 15,
         min: [0, 'Markup cannot be negative'],
       },
-      markedUpPrice: {
-        type: Number,
-        default: function () {
-          let price = Math.floor(
-            this.price.basePrice * (1 + this.price.markup / 100)
-          );
-          // If price is greater than 50 and ends in 0, subtract 1
-          if (price > 50 && price % 10 === 0) {
-            price = price - 1;
-          }
-          return price;
-        },
-      },
       discount: {
         type: Number,
         default: 0,
         min: [0, 'Discount cannot be negative'],
         max: [100, 'Discount cannot exceed 100%'],
-      },
-      discountedPrice: {
-        type: Number,
-        default: function () {
-          let price = Math.floor(
-            this.price.markedUpPrice * (1 - this.price.discount / 100)
-          );
-          // If price is greater than 50 and ends in 0, subtract 1
-          if (price > 50 && price % 10 === 0) {
-            price = price - 1;
-          }
-          return price;
-        },
       },
     },
 
@@ -187,6 +161,28 @@ const productVariantSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+// Virtual for markedUpPrice
+productVariantSchema.virtual('price.markedUpPrice').get(function () {
+  let markedUpPrice = Math.floor(
+    this.price.basePrice * (1 + this.price.markup / 100)
+  );
+  if (markedUpPrice > 50 && markedUpPrice % 10 === 0) {
+    markedUpPrice = markedUpPrice - 1;
+  }
+  return markedUpPrice;
+});
+
+// Virtual for discountedPrice
+productVariantSchema.virtual('price.discountedPrice').get(function () {
+  let discountedPrice = Math.floor(
+    this.price.markedUpPrice * (1 - this.price.discount / 100)
+  );
+  if (discountedPrice > 50 && discountedPrice % 10 === 0) {
+    discountedPrice = discountedPrice - 1;
+  }
+  return discountedPrice;
+});
 
 // Indexes for better query performance
 productVariantSchema.index({ 'stock.status': 1 });
