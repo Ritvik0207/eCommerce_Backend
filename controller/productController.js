@@ -1048,7 +1048,7 @@ const getFilteredProducts = async (req, res) => {
   }
 };
 
-const changeMarkupAndUpdateAllPrices = asyncHandler(async (req, res) => {
+const changeMarkupPercentage = asyncHandler(async (req, res) => {
   const markupPercentage = req.body.markupPercentage || 15;
 
   const products = await productModel.find({});
@@ -1061,7 +1061,7 @@ const changeMarkupAndUpdateAllPrices = asyncHandler(async (req, res) => {
   }
   res.status(200).json({
     success: true,
-    message: 'Markup updated successfully',
+    message: 'Markup Percentage updated successfully',
   });
 });
 
@@ -1084,4 +1084,5 @@ module.exports = {
   getCollectionNamesByCategoryAndSubcategory,
   getFilteredProducts,
   getCarouselProducts,
+  changeMarkupPercentage,
 };
