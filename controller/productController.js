@@ -39,11 +39,6 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new Error('Name, description, category, and shop are required');
   }
 
-  if (!name || !description || !category || !shop) {
-    res.statusCode = 400;
-    throw new Error('Name, description, category, and shop are required');
-  }
-
   if (!mongoose.Types.ObjectId.isValid(category)) {
     res.status(400);
     throw new Error('Invalid category ID');
@@ -65,15 +60,15 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new Error('Invalid artisan ID');
   }
 
-  if (!files || !files.baseImage || !files.baseImage[0]) {
+  if (!files || !files?.baseImage || !files?.baseImage[0]) {
     res.status(400);
     throw new Error('Base image is required');
   }
-  const baseImageFile = files.baseImage[0];
+  const baseImageFile = files?.baseImage[0];
   const fileId = await uploadFile(baseImageFile);
   const baseImage = {
     url: fileId,
-    altText: baseImageFile.originalname,
+    altText: baseImageFile?.originalname,
   };
 
   const restWithoutFalsyValues = Object.fromEntries(
@@ -92,6 +87,11 @@ const createProduct = asyncHandler(async (req, res) => {
     ...restWithoutFalsyValues,
   });
 
+  // check if variants is an array and it exists
+  if (!Array.isArray(variants) && variants?.length === 0) {
+    res.status(400);
+    throw new Error('Variants is required');
+  }
   // parse the variants list
   const variantList = JSON.parse(variants || '[]');
   const createdVariants = [];
