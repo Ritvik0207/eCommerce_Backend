@@ -63,6 +63,19 @@ const productVariantSchema = new mongoose.Schema(
         type: Number,
         required: [true, 'Base price is required'],
         min: [0, 'Price cannot be negative'],
+        // Remove the set function since it would only apply on new/updated documents
+        // Store the raw base price instead
+      },
+      markup: {
+        type: Number,
+        default: 15, // Store markup percentage as a field that can be updated
+        min: [0, 'Markup cannot be negative'],
+      },
+      markedUpPrice: {
+        type: Number,
+        default: function () {
+          return this.price.basePrice * (1 + this.price.markup / 100);
+        },
       },
       discount: {
         type: Number,
@@ -73,7 +86,7 @@ const productVariantSchema = new mongoose.Schema(
       discountedPrice: {
         type: Number,
         default: function () {
-          return this.price.basePrice * (1 - this.price.discount / 100);
+          return this.price.markedUpPrice * (1 - this.price.discount / 100);
         },
       },
     },
