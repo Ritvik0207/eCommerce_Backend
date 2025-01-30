@@ -36,23 +36,7 @@ const https = require('node:https');
 const helmet = require('helmet');
 
 // CORS configuration
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://apis.google.com'],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", 'https://eyongkart.com/api'],
-      },
-    },
-    crossOriginEmbedderPolicy: false, // Disable if you need to load external resources
-    crossOriginOpenerPolicy: {
-      policy: 'same-origin-allow-popups', // Allow popups for OAuth
-    },
-  })
-);
+app.use(helmet());
 
 app.use(
   cors({
