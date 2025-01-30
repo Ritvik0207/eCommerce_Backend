@@ -143,11 +143,18 @@ const createUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid phone number');
   }
 
-  // check if user already exists
-  const userExist = await User.findOne({ email });
-  if (userExist) {
+  // check if user already exists with email
+  const emailExists = await User.findOne({ email });
+  if (emailExists) {
     res.statusCode = 400;
-    throw new Error('User already exists');
+    throw new Error('User with this email already exists');
+  }
+
+  // check if user already exists with phone
+  const phoneExists = await User.findOne({ phone });
+  if (phoneExists) {
+    res.statusCode = 400;
+    throw new Error('User with this phone number already exists');
   }
 
   const genSalt = await bcrypt.genSalt(10);
