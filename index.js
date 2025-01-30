@@ -33,8 +33,10 @@ require('dotenv').config();
 const PORT = process.env.PORT || 5000;
 const app = express();
 const https = require('node:https');
+const helmet = require('helmet');
 
 // CORS configuration
+app.use(helmet());
 app.use(
   cors({
     origin: [
