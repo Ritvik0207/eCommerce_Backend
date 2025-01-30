@@ -127,51 +127,50 @@ const createProduct = asyncHandler(async (req, res) => {
   });
 });
 
-const getAllProducts = asyncHandler(async (req, res) => {
-  const queries = req.query;
-  const queryObj = {};
-  const populateQueries = {};
+// Helper functions
+const validateObjectId = (id, fieldName) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(`Invalid ${fieldName} ID`);
+  }
+};
 
-  // Basic filters
+const buildBasicFilters = (queries, queryObj) => {
   if (queries?.category) {
-    if (!mongoose.Types.ObjectId.isValid(queries.category)) {
-      res.statusCode = 400;
-      throw new Error('Invalid category ID');
-    }
+    validateObjectId(queries.category, 'category');
     queryObj.category = queries.category;
   }
   if (queries?.subcategory) {
-    if (!mongoose.Types.ObjectId.isValid(queries.subcategory)) {
-      res.statusCode = 400;
-      throw new Error('Invalid subcategory ID');
-    }
+    validateObjectId(queries.subcategory, 'subcategory');
     queryObj.subcategory = queries.subcategory;
   }
   if (queries?.shop) {
-    if (!mongoose.Types.ObjectId.isValid(queries.shop)) {
-      res.statusCode = 400;
-      throw new Error('Invalid shop ID');
-    }
+    validateObjectId(queries.shop, 'shop');
     queryObj.shop = queries.shop;
   }
+  return queryObj;
+};
 
-  // Product status and visibility
+const buildStatusFilters = (queries, queryObj) => {
   if (queries?.status) {
     queryObj.status = queries.status;
   }
   if (queries?.isVisible !== undefined) {
     queryObj.isVisible = queries.isVisible === 'true';
   }
+  return queryObj;
+};
 
-  // Target audience filters
+const buildAudienceFilters = (queries, queryObj) => {
   if (queries?.gender) {
     queryObj.gender = queries.gender;
   }
   if (queries?.ageGroup) {
     queryObj.ageGroup = queries.ageGroup;
   }
+  return queryObj;
+};
 
-  // Specifications filters
+const buildSpecificationFilters = (queries, queryObj) => {
   if (queries?.material) {
     queryObj['specifications.material'] = queries.material;
   }
@@ -181,8 +180,10 @@ const getAllProducts = asyncHandler(async (req, res) => {
   if (queries?.craftTechnique) {
     queryObj['specifications.craftTechnique'] = queries.craftTechnique;
   }
+  return queryObj;
+};
 
-  // Geographic filters
+const buildGeographicFilters = (queries, queryObj) => {
   if (queries?.region) {
     queryObj['geographicIndication.region'] = queries.region;
   }
@@ -193,38 +194,51 @@ const getAllProducts = asyncHandler(async (req, res) => {
     queryObj['geographicIndication.isGICertified'] =
       queries.isGICertified === 'true';
   }
+  return queryObj;
+};
 
-  // Text search on name and description
-  if (queries?.search) {
-    // Escape special regex characters to prevent injection
-    const escapeRegExp = (string) =>
-      string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const buildFuzzySearch = (searchTerm) => {
+  if (!searchTerm) return null;
 
-    const searchRegex = new RegExp(escapeRegExp(queries.search), 'i');
-    queryObj.$or = [
-      { name: searchRegex },
-      { description: searchRegex },
-      { 'specifications.material': searchRegex },
-      { 'specifications.weaveType': searchRegex },
-      { 'specifications.craftTechnique': searchRegex },
-    ];
-  }
+  // Split search term into words for better fuzzy matching
+  const words = searchTerm.split(/\s+/).filter((word) => word.length > 0);
 
-  // Handle populated field queries and comparison operators
+  // Create fuzzy search patterns for each word
+  const fuzzyPatterns = words.map((word) => {
+    // Allow for character variations and typos
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return `(?=.*${escapedWord})`;
+  });
+
+  // Combine patterns with word boundaries and case insensitivity
+  // The 'i' flag makes it case insensitive
+  // This regex requires ALL words to be present in ANY order
+  const regex = new RegExp(fuzzyPatterns.join(''), 'i');
+
+  // Search these fields for matches
+  return [
+    { name: regex },
+    { description: regex },
+    { 'specifications.material': regex },
+    { 'specifications.weaveType': regex },
+    { 'specifications.craftTechnique': regex },
+  ];
+};
+
+const buildVariantQueries = (queries) => {
+  const populateQueries = {};
+
   for (const key of Object.keys(queries)) {
     if (key.includes('.')) {
       const [collection, ...pathParts] = key.split('.');
 
-      // Skip if not a valid collection to query
       if (!['variants'].includes(collection)) continue;
 
-      // Extract any comparison operator from the last part
       const lastPart = pathParts[pathParts.length - 1];
-      const path = [...pathParts]; // Create a copy to avoid modifying original
+      const path = [...pathParts];
       let operator = '$eq';
       let value = queries[key];
 
-      // Check for comparison operators
       const operators = {
         gte: '$gte',
         lte: '$lte',
@@ -233,14 +247,12 @@ const getAllProducts = asyncHandler(async (req, res) => {
         ne: '$ne',
       };
 
-      // Check if the field name contains operator suffix (e.g. discount_gte)
       for (const [symbol, mongoOp] of Object.entries(operators)) {
         if (lastPart.includes(symbol)) {
-          // Split field name into base field and operator
           const [baseField] = lastPart.split(symbol);
           path[path.length - 1] = baseField.split('_')[0].trim();
           operator = mongoOp;
-          // Convert to number only for numeric fields
+
           if (
             [
               'price.basePrice',
@@ -255,32 +267,52 @@ const getAllProducts = asyncHandler(async (req, res) => {
         }
       }
 
-      // Initialize collection in populateQueries if needed
       if (!populateQueries[collection]) {
         populateQueries[collection] = { match: {} };
       }
 
-      // Build the match condition with operator
       populateQueries[collection].match[path.join('.')] = { [operator]: value };
     }
   }
+
+  return populateQueries;
+};
+
+const getAllProducts = asyncHandler(async (req, res) => {
+  const queries = req.query;
+  let queryObj = {};
+
+  // Build all filters
+  queryObj = buildBasicFilters(queries, queryObj);
+  queryObj = buildStatusFilters(queries, queryObj);
+  queryObj = buildAudienceFilters(queries, queryObj);
+  queryObj = buildSpecificationFilters(queries, queryObj);
+  queryObj = buildGeographicFilters(queries, queryObj);
+
+  // Add fuzzy search
+  if (queries?.search) {
+    queryObj.$or = buildFuzzySearch(queries.search);
+  }
+
+  // Handle variant queries
+  const populateQueries = buildVariantQueries(queries);
 
   // Pagination
   const page = Number.parseInt(queries.page) || 1;
   const limit = Number.parseInt(queries.limit) || 10;
   const skip = (page - 1) * limit;
 
-  // Ensure page and limit are within reasonable bounds
   if (page < 1 || limit < 1 || limit > 100) {
     res.status(400);
     throw new Error('Invalid pagination parameters');
   }
 
+  // Build query
   let productsQuery = productModel
     .find(queryObj)
     .setOptions({ virtuals: true });
 
-  // Apply population with match conditions
+  // Apply population
   if (populateQueries.variants) {
     productsQuery = productsQuery.populate({
       path: 'variants',
@@ -291,7 +323,6 @@ const getAllProducts = asyncHandler(async (req, res) => {
     productsQuery = productsQuery.populate('variants');
   }
 
-  // Get total count for pagination
   const totalProducts = await productModel.countDocuments(queryObj);
   const totalPages = Math.ceil(totalProducts / limit);
 
@@ -307,7 +338,6 @@ const getAllProducts = asyncHandler(async (req, res) => {
   try {
     const products = await productsQuery.exec();
 
-    // Filter out products with no matching variants if variant queries exist
     const filteredProducts = populateQueries.variants
       ? products.filter((product) => product.variants?.length > 0)
       : products;

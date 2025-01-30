@@ -13,10 +13,18 @@ const addToCart = asyncHandler(async (req, res) => {
   }
 
   // check if product is available
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId).populate('variants');
+
   if (!product) {
     res.statusCode = 400;
     throw new Error('Product not found');
+  }
+
+  if (
+    !product?.variants?.find((variant) => variant._id.toString() === variantId)
+  ) {
+    res.statusCode = 400;
+    throw new Error('Variant not found');
   }
 
   if (quantity <= 0) {
@@ -35,8 +43,12 @@ const addToCart = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
+  console.log(productId, variantId, user.cart, 'user.cart');
+
   const cartItem = user.cart.find(
-    (item) => item.product.toString() === productId
+    (item) =>
+      item.product.toString() === productId &&
+      item?.variantId?.[0]?.toString() === variantId
   );
 
   if (cartItem) {
@@ -79,7 +91,9 @@ const updateCart = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
   const cartItem = user.cart.find(
-    (item) => item.product.toString() === productId
+    (item) =>
+      item.product.toString() === productId &&
+      item?.variantId?.[0]?.toString() === variantId
   );
   if (!cartItem) {
     const newCartItem = {
@@ -109,12 +123,16 @@ const clearCart = asyncHandler(async (req, res) => {
 
 // remove from cart
 const removeFromCart = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
+  const { productId, variantId } = req.params;
   const user = await User.findById(req.user._id);
+
+  console.log(productId, variantId, user.cart, 'user.cart');
 
   // check if product is available in the cart already
   const cartItem = user.cart.find(
-    (item) => item.product.toString() === productId
+    (item) =>
+      item.product.toString() === productId &&
+      item?.variantId?.[0]?.toString() === variantId
   );
   if (!cartItem) {
     res.statusCode = 400;
@@ -122,7 +140,11 @@ const removeFromCart = asyncHandler(async (req, res) => {
   }
 
   // remove the product from the cart
-  user.cart = user.cart.filter((item) => item.product.toString() !== productId);
+  user.cart = user.cart.filter(
+    (item) =>
+      item.product.toString() !== productId ||
+      item?.variantId?.[0]?.toString() !== variantId
+  );
   await user.save();
   return res
     .status(200)
