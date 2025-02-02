@@ -127,6 +127,182 @@ const createProduct = asyncHandler(async (req, res) => {
   });
 });
 
+const updateProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const {
+    name, 
+    description,
+    category,
+    subcategory,
+    shop,
+    artisan,
+    variants,
+    ...rest
+  } = req.body;
+
+  const { files } = req;
+
+  // check if product exists
+  const existingProduct = await productModel.findById(id);
+  if (!existingProduct) {
+    res.status(404);
+    throw new Error('Product not found');
+  }
+
+  const falsyValues = [undefined, null, '', 'undefined', 'null'];
+
+  if (
+    (!falsyValues.includes(category) && !mongoose.Types.ObjectId.isValid(category)) ||
+    (!falsyValues.includes(subcategory) && !mongoose.Types.ObjectId.isValid(subcategory)) ||
+    (!falsyValues.includes(artisan) && !mongoose.Types.ObjectId.isValid(artisan))
+  ) {
+    res.status(400);
+    throw new Error('Invalid ID provided for category, subcategory, or artisan');
+  }
+
+  // handle base image update if provided
+  let baseImage = existingProduct.baseImage;
+  if (files?.baseImage && files.baseImage[0]) {
+    const baseImageFile = files.baseImage[0];
+    const fileId = await uploadFile(baseImageFile);
+    baseImage = {
+      url: fileId,
+      altText: baseImageFile.originalname,
+    };
+  }
+
+  // filter out the falsy values from the rest of the updates
+  const restWithoutFalsyValues = Object.fromEntries(
+    Object.entries(rest).filter(([key, value]) => !falsyValues.includes(value))
+  );
+
+  // update the product
+  const updatedProduct = await productModel.findByIdAndUpdate(
+    id,
+    {
+      ...(name && { name }),
+      ...(description && { description }),
+      ...(category && { category }),
+      ...(subcategory && { subcategory }),
+      ...(shop && { shop }),
+      ...(artisan && { artisan }),
+      baseImage,
+      ...restWithoutFalsyValues,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  )
+
+  // handle variants update if provided
+  if (variants) {
+    const variantList = JSON.parse(variants);
+    const updatedVariants = [];
+
+    // delete existing variants that are not in the new list
+    const variantIdsToKeep = variantList.filter(v => v._id).map(v => v._id);
+
+    await productVariantModel.deleteMany({
+      product: id,
+      _id: { $nin: variantIdsToKeep }
+    });
+
+    for (const variant of variantList) {
+      const variantImages = [];
+
+      if (variant.id) {
+        const variantKey = `variant_${variant.id}`;
+        const variantFiles = files[variantKey] || [];
+
+        for (const file of variantFiles) {
+          const fileId = await uploadFile(file);
+          variantImages.push({
+            url: fileId,
+            altText: file.originalname,
+          });
+        }
+      }
+
+      if (variant._id) {
+        // update existing variant
+        const updatedVariant = await productVariantModel.findByIdAndUpdate(
+          variant._id,
+          {
+            ...variant,
+            ...(variantImages.length > 0 && { images: variantImages }),
+          },
+          { new : true }
+        );
+        updatedVariants.push(updatedVariant);
+      } else {
+        // create new variant
+        const newVariant = await productVariantModel.create({
+          product: id,
+          isActive: variant.isActive !== undefined ? variant.isActive : true,
+          images: variantImages,
+          ...variant,
+        });
+        updatedVariants.push(newVariant);
+      }
+    }
+
+    // fetch the complete updated product with populated fields
+    const completeProduct = await productModel
+      .findById(id)
+      .populate('category')
+      .populate('subcategory', 'name')
+      .populate('shop')
+      .populate('variants');
+    
+      res.status(200).json({
+        success: true,
+        message: 'Product and variants updated successfully',
+        product: completeProduct,
+        variants: updatedVariants
+      });
+  } else {
+    // if no variants update, just return the updated product
+    const completeProduct = await productModel
+      .findById(id)
+      .populate('category')
+      .populate('subcategory', 'name')
+      .populate('shop')
+      .populate('variants');
+
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      product: completeProduct,
+    })
+  }
+})
+
+const deleteProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const product = await productModel
+    .findById(id)
+    .setOptions({ virtuals: true });
+
+  if (!product) {
+    res.statusCode = 404;
+    throw new Error('Product not found');
+  }
+
+  // delete all associated variants
+  await productVariantModel.deleteMany({ product: id })
+
+  // delete the product
+  await product.deleteOne();
+
+  res.status(200).json({
+    success: true,
+    message: 'Product and its variants successfully deleted',
+  });
+});
+
 // Helper functions
 const validateObjectId = (id, fieldName) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -410,66 +586,6 @@ const getProductById = asyncHandler(async (req, res) => {
   });
 });
 
-const updateProduct = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const updatedData = req.body;
-
-  const existingProduct = await productModel
-    .findById(id)
-    .setOptions({ virtuals: true });
-  if (!existingProduct) {
-    res.statusCode = 404;
-    throw new Error('Product not found');
-  }
-
-  if (req.files && req.files.length > 0) {
-    const fileIds = [];
-    for (const file of req.files) {
-      const fileId = await uploadFile(file);
-      fileIds.push({
-        url: fileId,
-        altText: file.originalname,
-      });
-    }
-    updatedData.images = fileIds;
-  }
-  const updatedProduct = await productModel
-    .findByIdAndUpdate(id, updatedData, {
-      new: true,
-      runValidators: true,
-      virtuals: true,
-    })
-    .populate('category')
-    .populate('subcategory', 'name')
-    .populate('shop')
-    .populate('variants');
-
-  res.status(200).json({
-    success: true,
-    message: 'Product updated successfully',
-    product: updatedProduct,
-  });
-});
-
-const deleteProduct = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const product = await productModel
-    .findById(id)
-    .setOptions({ virtuals: true });
-
-  if (!product) {
-    res.statusCode = 404;
-    throw new Error('Product not found');
-  }
-
-  await product.deleteOne();
-
-  res.status(200).json({
-    success: true,
-    message: 'Product successfully deleted',
-  });
-});
 
 const getProductsByShopId = asyncHandler(async (req, res) => {
   const { id } = req.params;

@@ -55,9 +55,6 @@ const productSchema = new mongoose.Schema(
       material: {
         type: String,
         default: 'Other',
-        // Examples: Cotton, Silk, Wool, Linen, Jute, Khadi,
-        // Chanderi silk, Tussar silk, Muga silk, Kanchipuram silk,
-        // Banarasi silk, Pochampally ikat, Maheshwari cotton
       },
       weaveType: {
         type: String,
@@ -85,12 +82,6 @@ const productSchema = new mongoose.Schema(
       enum: ['Adult', 'Kids', 'All'],
       default: 'Adult',
     },
-
-    // Product status and visibility
-    // Status field to track the product's publishing state:
-    // - draft: Product is still being worked on and not ready for public view
-    // - published: Product is live and visible to customers
-    // - archived: Product has been taken down but data is preserved
     status: {
       type: String,
       enum: ['draft', 'published', 'archived'],
@@ -121,24 +112,6 @@ const productSchema = new mongoose.Schema(
         // Examples: ["silk saree", "kanchipuram silk", "wedding saree", "traditional saree", "handloom", "zari work"]
       },
     ],
-
-    // // Ratings and reviews
-    // averageRating: {
-    //   type: Number,
-    //   default: 0,
-    //   min: 0,
-    //   max: 5,
-    // },
-    // totalReviews: {
-    //   type: Number,
-    //   default: 0,
-    // },
-
-    // // Artisan/Weaver information
-    // artisan: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: 'artisan',
-    // },
   },
   {
     timestamps: true,
@@ -159,10 +132,6 @@ productSchema.virtual('variants', {
 productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ 'specifications.material': 1 });
 productSchema.index({ category: 1, subcategory: 1 });
-
-// Note: To get variants with find() or findById(), you need to populate:
-// await ProductModel.findById(id).populate({ path: 'variants', options: { virtuals: true } })
-// await ProductModel.find().populate({ path: 'variants', options: { virtuals: true } })
 
 const productModel = mongoose.model('product', productSchema);
 
