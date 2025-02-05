@@ -306,7 +306,12 @@ const getAllCustomers = asyncHandler(async (req, res) => {
   const data = await User.find()
     .select('-password')
     .populate('address')
-    .populate('cart.product');
+    .populate({
+      path: 'cart.product',
+      populate: {
+        path: 'variants',
+      },
+    });
 
   return res.status(200).json({ success: 'Get all the Data', data: data });
 });
