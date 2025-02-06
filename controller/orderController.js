@@ -405,6 +405,51 @@ const updateOrderStatus = expressAsyncHandler(async (req, res) => {
   });
 });
 
+// update order payment status
+const updatePaymentStatus = expressAsyncHandler(async(req, res) => {
+  if (!Object.values(ADMIN_ROLES).includes(req?.admin?.role)) {
+    res.statusCode = 403;
+    throw new Error('You are not authorized to access this route')
+  }
+
+  const { orderId } = req.params;
+  const { paymentStatus } = req.body;
+
+  if (!mongoose.isValidObjectId(orderId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid order ID');
+  }
+
+  if (!paymentStatus) {
+    res.statusCode = 400;
+    throw new Error('status is required');
+  }
+
+  if (!Object.values(PAYMENT_STATUS).includes(paymentStatus)) {
+    res.statusCode = 400;
+    throw new Error(
+      'Invalid payment status. It should be either pending, success or failed.'
+    );
+  }
+
+  const order = await orderModel.findByIdAndUpdate(
+    orderId,
+    { "payment.status": paymentStatus },
+    { new: true },
+  );
+
+  if (!order) {
+    res.statusCode = 400;
+    throw new Error('Order not found');
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Order status update successfully',
+    order,
+  })
+})
+
 const deleteAllOrders = expressAsyncHandler(async (req, res) => {
   if (ADMIN_ROLES.SUPER_ADMIN !== req?.admin?.role) {
     res.statusCode = 403;
@@ -451,4 +496,5 @@ module.exports = {
   deleteAllOrders,
   getShippingDetails,
   getMyOrders,
+  updatePaymentStatus
 };

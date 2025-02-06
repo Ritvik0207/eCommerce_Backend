@@ -9,6 +9,7 @@ const {
   deleteAllOrders,
   getShippingDetails,
   getMyOrders,
+  updatePaymentStatus
 } = require('../controller/orderController');
 
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
@@ -30,6 +31,9 @@ router.get(
 
 // Update order status
 router.put('/updateOrderStatus/:orderId', authenticateAdmin, updateOrderStatus);
+
+// update payment status
+router.put('/updatePaymentStatus/:orderId', authenticateAdmin, updatePaymentStatus);
 
 // get shipping details
 router.post('/getShippingDetails', authenticateCustomer, getShippingDetails);
