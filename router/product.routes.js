@@ -51,7 +51,8 @@ router.put(
   '/update/:id',
   authenticateAdmin,
   validateObjectId,
-  upload.fields(generateVariantFields()),
+  upload.array('images'),
+  upload.single('baseImage'),
   updateProduct
 );
 router.delete(
