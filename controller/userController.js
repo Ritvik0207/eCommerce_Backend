@@ -335,6 +335,28 @@ const getTotalUserCount = asyncHandler(async (req, res) => {
   }
 });
 
+const deleteCustomer = asyncHandler(async (req, res) => {
+  const { customerId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(customerId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid customer ID');
+  }
+
+  const deletedCustomer = await User.findByIdAndDelete(customerId);
+
+  if (!deletedCustomer) {
+    res.statusCode = 404;
+    throw new Error('Customer not found');
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Customer deleted successfully',
+    data: deletedCustomer,
+  });
+});
+
 module.exports = {
   createUser,
   getAllCustomers,
@@ -344,4 +366,5 @@ module.exports = {
   getTotalUserCount,
   logoutUser,
   googleLogin,
+  deleteCustomer,
 };

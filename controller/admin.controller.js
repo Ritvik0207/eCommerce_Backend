@@ -395,19 +395,48 @@ const deleteAdmin = asyncHandler(async (req, res) => {
 
   const { adminId } = req.params;
 
+  // if the super admin is the logged in admin, return error
+  if (req.admin._id.toString() === adminId) {
+    res.statusCode = 400;
+    throw new Error('Cannot delete the only Super Admin');
+  }
+
   if (!mongoose.Types.ObjectId.isValid(adminId)) {
     res.statusCode = 400;
     throw new Error('Invalid admin ID');
   }
 
-  // Find and delete admin
-  const deletedAdmin = await adminModel.findByIdAndDelete(adminId);
-  if (!deletedAdmin) {
+  // find the admin
+  const admin = await adminModel.findById(adminId);
+  if (!admin) {
     res.statusCode = 404;
     throw new Error('Admin not found');
   }
 
-  return res.status(204).json({
+  // check if the admin is a super admin
+  if (admin.role === ADMIN_ROLES.SUPER_ADMIN) {
+    // if the super admin is the only super admin left, return error
+    const superAdmins = await adminModel.find({
+      role: ADMIN_ROLES.SUPER_ADMIN,
+    });
+
+    if (superAdmins.length === 1) {
+      res.statusCode = 400;
+      throw new Error('Cannot delete the only Super Admin');
+    }
+  }
+
+  // Delete the admin
+  await adminModel.findByIdAndDelete(adminId);
+
+  // delete the admin from the shop
+  if (admin.shop) {
+    await shopModel.findByIdAndUpdate(admin.shop, {
+      $unset: { owner: adminId },
+    });
+  }
+
+  return res.status(200).json({
     success: true,
     message: 'Admin deleted successfully',
   });

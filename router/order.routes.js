@@ -9,7 +9,9 @@ const {
   deleteAllOrders,
   getShippingDetails,
   getMyOrders,
-  updatePaymentStatus
+  updatePaymentStatus,
+  deleteOrderById,
+  updateEstimatedDeliveryDate,
 } = require('../controller/orderController');
 
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
@@ -33,13 +35,27 @@ router.get(
 router.put('/updateOrderStatus/:orderId', authenticateAdmin, updateOrderStatus);
 
 // update payment status
-router.put('/updatePaymentStatus/:orderId', authenticateAdmin, updatePaymentStatus);
+router.put(
+  '/updatePaymentStatus/:orderId',
+  authenticateAdmin,
+  updatePaymentStatus
+);
+
+// update estimated delivery date
+router.put(
+  '/updateEstimatedDeliveryDate/:orderId',
+  authenticateAdmin,
+  updateEstimatedDeliveryDate
+);
 
 // get shipping details
 router.post('/getShippingDetails', authenticateCustomer, getShippingDetails);
 
 // Delete all orders [DANGEROUS]
 router.delete('/deleteAllOrders', authenticateAdmin, deleteAllOrders);
+
+// Delete order by id [DANGEROUS]
+router.delete('/deleteOrderById/:orderId', authenticateAdmin, deleteOrderById);
 
 //  get my orders
 router.get('/myOrders', authenticateCustomer, getMyOrders);

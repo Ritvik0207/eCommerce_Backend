@@ -9,6 +9,7 @@ const {
   getAllCustomers,
   logoutUser,
   googleLogin,
+  deleteCustomer,
 } = require('../controller/userController');
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
 const authenticateAdmin = require('../middlewares/authenticateAdmin');
@@ -23,6 +24,8 @@ route.post('/googlelogin', googleLogin);
 route.post('/logout', authenticateCustomer, logoutUser);
 // Admin get total users
 route.get('/totalUsers', getTotalUserCount);
+// Admin delete customer
+route.delete('/delete/:customerId', authenticateAdmin, deleteCustomer);
 
 //otp
 route.post('/sendotp', async (req, res) => {

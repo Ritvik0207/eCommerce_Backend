@@ -406,10 +406,10 @@ const updateOrderStatus = expressAsyncHandler(async (req, res) => {
 });
 
 // update order payment status
-const updatePaymentStatus = expressAsyncHandler(async(req, res) => {
+const updatePaymentStatus = expressAsyncHandler(async (req, res) => {
   if (!Object.values(ADMIN_ROLES).includes(req?.admin?.role)) {
     res.statusCode = 403;
-    throw new Error('You are not authorized to access this route')
+    throw new Error('You are not authorized to access this route');
   }
 
   const { orderId } = req.params;
@@ -434,8 +434,8 @@ const updatePaymentStatus = expressAsyncHandler(async(req, res) => {
 
   const order = await orderModel.findByIdAndUpdate(
     orderId,
-    { "payment.status": paymentStatus },
-    { new: true },
+    { 'payment.status': paymentStatus },
+    { new: true }
   );
 
   if (!order) {
@@ -447,8 +447,8 @@ const updatePaymentStatus = expressAsyncHandler(async(req, res) => {
     success: true,
     message: 'Order status update successfully',
     order,
-  })
-})
+  });
+});
 
 const deleteAllOrders = expressAsyncHandler(async (req, res) => {
   if (ADMIN_ROLES.SUPER_ADMIN !== req?.admin?.role) {
@@ -486,6 +486,70 @@ const getShippingDetails = expressAsyncHandler(async (req, res) => {
   });
 });
 
+const deleteOrderById = expressAsyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+
+  if (!mongoose.isValidObjectId(orderId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid order ID');
+  }
+
+  const order = await orderModel.findByIdAndDelete(orderId);
+
+  if (!order) {
+    res.statusCode = 404;
+    throw new Error('Order not found');
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Order deleted successfully',
+    order,
+  });
+});
+
+const updateEstimatedDeliveryDate = expressAsyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { estimatedDeliveryDate } = req.body;
+
+  if (!mongoose.isValidObjectId(orderId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid order ID');
+  }
+
+  if (!estimatedDeliveryDate) {
+    res.statusCode = 400;
+    throw new Error('Estimated delivery date is required');
+  }
+
+  // if the estimated delivery date is not a valid date, throw an error
+  if (Number.isNaN(new Date(estimatedDeliveryDate).getTime())) {
+    res.statusCode = 400;
+    throw new Error('Invalid estimated delivery date');
+  }
+
+  const order = await orderModel.findByIdAndUpdate(
+    orderId,
+    {
+      'shipping_details.estimated_delivery_date': new Date(
+        estimatedDeliveryDate
+      ),
+    },
+    { new: true }
+  );
+
+  if (!order) {
+    res.statusCode = 404;
+    throw new Error('Order not found');
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Estimated delivery date updated successfully',
+    order,
+  });
+});
+
 module.exports = {
   createOrder,
   getOrder,
@@ -496,5 +560,7 @@ module.exports = {
   deleteAllOrders,
   getShippingDetails,
   getMyOrders,
-  updatePaymentStatus
+  updatePaymentStatus,
+  deleteOrderById,
+  updateEstimatedDeliveryDate,
 };
