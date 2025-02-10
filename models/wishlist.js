@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const wishlistSchema = new mongoose.Schema(
   {
@@ -68,5 +69,7 @@ wishlistSchema.statics = {
       });
   },
 };
+
+wishlistSchema.plugin(defaultSortPlugin);
 
 module.exports = mongoose.model('Wishlist', wishlistSchema);

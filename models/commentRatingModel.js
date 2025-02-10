@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const commentRatingSchema = new mongoose.Schema(
   {
@@ -41,6 +42,8 @@ const commentRatingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+commentRatingSchema.plugin(defaultSortPlugin);
 
 const commentRatingModel = mongoose.model('comments', commentRatingSchema);
 

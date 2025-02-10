@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const cartSchema = new mongoose.Schema(
   {
@@ -24,5 +25,8 @@ const cartSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+cartSchema.plugin(defaultSortPlugin);
+
 const cartModel = mongoose.model('carts', cartSchema);
 module.exports = cartModel;

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 // Using 'new' keyword creates a new instance/object of mongoose.Schema
 // Without 'new' keyword, mongoose.Schema would be treated as a function call
@@ -69,6 +70,8 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+userSchema.plugin(defaultSortPlugin);
 
 const userModel = mongoose.model('users', userSchema);
 

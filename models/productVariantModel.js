@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const productVariantSchema = new mongoose.Schema(
   {
@@ -243,5 +244,7 @@ const productVariantModel = mongoose.model(
   'productVariants',
   productVariantSchema
 );
+
+productVariantSchema.plugin(defaultSortPlugin);
 
 module.exports = productVariantModel;

@@ -10,6 +10,8 @@ const {
   logoutUser,
   googleLogin,
   deleteCustomer,
+  getCustomerById,
+  updateCustomer,
 } = require('../controller/userController');
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
 const authenticateAdmin = require('../middlewares/authenticateAdmin');
@@ -19,11 +21,15 @@ const route = express.Router();
 route.post('/register', createUser); //http:localhost:3000/user/register
 // admin get all customers
 route.get('/getAllCustomers', authenticateAdmin, getAllCustomers);
+// admin get customer by id
+route.get('/getCustomerById/:customerId', authenticateAdmin, getCustomerById);
 route.post('/login', loginUser);
 route.post('/googlelogin', googleLogin);
-route.post('/logout', authenticateCustomer, logoutUser);
+route.post('/logout', logoutUser);
 // Admin get total users
 route.get('/totalUsers', getTotalUserCount);
+// Admin update customer
+route.put('/update/:customerId', authenticateAdmin, updateCustomer);
 // Admin delete customer
 route.delete('/delete/:customerId', authenticateAdmin, deleteCustomer);
 

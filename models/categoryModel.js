@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { GENDER } = require('../constants/constants');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const categorySchema = new mongoose.Schema(
   {
@@ -65,6 +66,8 @@ categorySchema.virtual('productsCount', {
   foreignField: 'category',
   count: true,
 });
+
+categorySchema.plugin(defaultSortPlugin);
 
 const categoryModel = mongoose.model('category', categorySchema);
 module.exports = categoryModel;

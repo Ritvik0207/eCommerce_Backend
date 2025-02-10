@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const footerSubHeadingSchema = new mongoose.Schema(
   {
@@ -17,5 +18,7 @@ const footerSubHeadingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+footerSubHeadingSchema.plugin(defaultSortPlugin);
 
 module.exports = mongoose.model('footersubheading', footerSubHeadingSchema);

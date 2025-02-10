@@ -1,23 +1,24 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const deliverySchema = new mongoose.Schema(
   {
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Order",
+      ref: 'Order',
       required: true,
     },
     status: {
       type: String,
       enum: [
-        "ordered",
-        "processing",
-        "shipped",
-        "out for delivery",
-        "delivered",
-        "canceled",
+        'ordered',
+        'processing',
+        'shipped',
+        'out for delivery',
+        'delivered',
+        'canceled',
       ],
-      default: "ordered",
+      default: 'ordered',
     },
     estimatedDeliveryTime: { type: Date },
     trackingUpdates: [
@@ -31,4 +32,6 @@ const deliverySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("delivery", deliverySchema);
+deliverySchema.plugin(defaultSortPlugin);
+
+module.exports = mongoose.model('delivery', deliverySchema);

@@ -12,6 +12,7 @@ const {
   updateSuperAdmin,
   logoutAdmin,
   getSellerById,
+  getAdminById,
 } = require('../controller/admin.controller');
 const authenticateAdmin = require('../middlewares/authenticateAdmin');
 const router = express.Router();
@@ -23,17 +24,18 @@ router.post('/signUpAsSellerAdmin', signUpAsSellerAdmin);
 router.post('/create', authenticateAdmin, createAdmin);
 router.post('/login', loginAdmin);
 router.get('/getAllAdmins', authenticateAdmin, getAdmins);
+router.get('/getAdminById/:adminId', authenticateAdmin, getAdminById);
 // admin logout
-router.post('/logout', authenticateAdmin, logoutAdmin);
+router.post('/logout', logoutAdmin);
 
 // TODO: do otp verification for email and then implement this
 router.post('/verify-email', authenticateAdmin, verifyAdminEmail);
 // TODO: Implement forgot password
 // router.post('/forgot-password', authenticateAdmin, forgotPassword);
-router.put('/update', authenticateAdmin, updateAdmin);
+router.put('/update/:adminId', authenticateAdmin, updateAdmin);
 router.delete('/delete/:adminId', authenticateAdmin, deleteAdmin);
 router.get('/all-admin-count', authenticateAdmin, getTotalAdminCount);
 router.get('/seller-admin-count', authenticateAdmin, getTotalSellerAdminCount);
-router.put('/super-admin/update',authenticateAdmin, updateSuperAdmin);
-router.get('/seller/:adminId',authenticateAdmin, getSellerById);
+router.put('/super-admin/update', authenticateAdmin, updateSuperAdmin);
+router.get('/seller/:adminId', authenticateAdmin, getSellerById);
 module.exports = router;

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const productSchema = new mongoose.Schema(
   {
@@ -132,6 +133,8 @@ productSchema.virtual('variants', {
 productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ 'specifications.material': 1 });
 productSchema.index({ category: 1, subcategory: 1 });
+
+productSchema.plugin(defaultSortPlugin);
 
 const productModel = mongoose.model('product', productSchema);
 

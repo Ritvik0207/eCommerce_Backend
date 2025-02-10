@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer'); // Import your admin model
 // const { generateOTP, sendOTP } = require("../utils/otpUtils");
 const adminModel = require('../models/adminModel');
 const asyncHandler = require('express-async-handler');
-const { ADMIN_ROLES } = require('../constants/constants');
+const { ADMIN_ROLES, COOKIE, JWT_CONFIG } = require('../constants/constants');
 const validator = require('validator');
 const shopModel = require('../models/shopModel');
 const artisanModel = require('../models/artisanModel');
@@ -168,18 +168,19 @@ const loginAdmin = asyncHandler(async (req, res) => {
   // Generate JWT token
   const token = jwt.sign(
     adminWithoutPassword.toObject(),
-    process.env.JWT_SECRET,
+    JWT_CONFIG.ADMIN.JWT_SECRET,
     {
-      expiresIn: '7d',
+      expiresIn: JWT_CONFIG.ADMIN.JWT_EXPIRES_IN,
     }
   );
 
   // Set cookie
-  res.cookie('adminJwt', token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+  res.cookie(COOKIE.ADMIN.COOKIE_NAME, token, {
+    httpOnly: COOKIE.ADMIN.HTTP_ONLY,
+    secure: COOKIE.ADMIN.SECURE,
+    sameSite: COOKIE.ADMIN.SAME_SITE,
+    maxAge: COOKIE.ADMIN.MAX_AGE,
+    // maxAge: 4 * 1000,
   });
 
   return res.status(200).json({
@@ -208,10 +209,10 @@ const getAdmins = asyncHandler(async (req, res) => {
 
 // Admin logout
 const logoutAdmin = asyncHandler(async (req, res) => {
-  res.cookie('adminJwt', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+  res.cookie(COOKIE.ADMIN.COOKIE_NAME, '', {
+    httpOnly: COOKIE.ADMIN.HTTP_ONLY,
+    secure: COOKIE.ADMIN.SECURE,
+    sameSite: COOKIE.ADMIN.SAME_SITE,
     expires: new Date(0),
     maxAge: 0,
   });
@@ -223,7 +224,7 @@ const logoutAdmin = asyncHandler(async (req, res) => {
 });
 
 // Function to verify admin email via OTP
-const verifyAdminEmail = async (req, res) => {
+const verifyAdminEmail = asyncHandler(async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -240,7 +241,7 @@ const verifyAdminEmail = async (req, res) => {
     console.error(err);
     return res.status(500).json({ success: false, message: err.message });
   }
-};
+});
 
 // Update admin information
 const updateAdmin = asyncHandler(async (req, res) => {
@@ -249,7 +250,14 @@ const updateAdmin = asyncHandler(async (req, res) => {
     throw new Error('You are not authorized to update this admin');
   }
 
-  const { role: _role, adminId, _id: _adminId, ...updateData } = req.body;
+  const { adminId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(adminId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid admin ID');
+  }
+
+  const { role: _role, ...updateData } = req.body;
 
   if (req.admin?.role === ADMIN_ROLES.SHOP_SELLER_SITE_ADMIN) {
     if (_role !== ADMIN_ROLES.SHOP_SELLER_SITE_ADMIN) {
@@ -293,11 +301,6 @@ const updateAdmin = asyncHandler(async (req, res) => {
   const dataToUpdate = {
     ...updateData,
   };
-
-  if (req.admin.role === ADMIN_ROLES.SUPER_ADMIN && !adminId) {
-    res.statusCode = 400;
-    throw new Error('Admin ID is required');
-  }
 
   const adminIdToUpdate =
     req.admin.role === ADMIN_ROLES.SUPER_ADMIN ? adminId : req.admin._id;
@@ -516,6 +519,26 @@ const getSellerById = asyncHandler(async (req, res) => {
   });
 });
 
+// get admin by id
+const getAdminById = asyncHandler(async (req, res) => {
+  const { adminId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(adminId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid admin ID');
+  }
+
+  const admin = await adminModel.findById(adminId);
+  if (!admin) {
+    res.statusCode = 404;
+    throw new Error('Admin not found');
+  }
+
+  return res.status(200).json({
+    success: true,
+    admin,
+  });
+});
+
 module.exports = {
   createAdmin,
   loginAdmin,
@@ -529,4 +552,5 @@ module.exports = {
   updateSuperAdmin,
   logoutAdmin,
   getSellerById,
+  getAdminById,
 };

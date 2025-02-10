@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const orderSchema = new mongoose.Schema(
   {
@@ -156,6 +157,8 @@ orderSchema.pre(/^find/, function (next) {
   });
   next();
 });
+
+orderSchema.plugin(defaultSortPlugin);
 
 const Order = mongoose.model('order', orderSchema);
 module.exports = Order;

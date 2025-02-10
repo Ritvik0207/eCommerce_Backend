@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { CRAFT_TYPES } = require('../constants/constants');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const artisanSchema = new mongoose.Schema(
   {
@@ -145,6 +146,8 @@ artisanSchema.virtual('products', {
 artisanSchema.index({ name: 'text' });
 artisanSchema.index({ 'specialization.craftType': 1 });
 artisanSchema.index({ status: 1 });
+
+artisanSchema.plugin(defaultSortPlugin);
 
 const artisanModel = mongoose.model('artisan', artisanSchema);
 module.exports = artisanModel;

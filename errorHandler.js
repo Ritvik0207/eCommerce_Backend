@@ -5,6 +5,17 @@ const errorHandler = (err, req, res, next) => {
   // Set default status and message if not already set
   let message = err?._message || err?.message || 'Internal Server Error';
 
+  if (err.name === 'JsonWebTokenError') {
+    message = 'Invalid token';
+    res.statusCode = 401;
+  } else if (err.name === 'TokenExpiredError') {
+    message = 'Token expired';
+    res.statusCode = 401;
+  } else if (err.name === 'NotBeforeError') {
+    message = 'Token not yet valid';
+    res.statusCode = 401;
+  }
+
   // Handle Mongoose validation errors
   if (err.name === 'ValidationError') {
     const validationErrors = Object.values(err.errors).map(

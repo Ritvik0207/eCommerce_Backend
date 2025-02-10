@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const shopSchema = new mongoose.Schema(
   {
@@ -119,6 +120,8 @@ shopSchema.virtual('products', {
   foreignField: 'shop',
   localField: '_id',
 });
+
+shopSchema.plugin(defaultSortPlugin);
 
 const shopModel = mongoose.model('shop', shopSchema);
 module.exports = shopModel;

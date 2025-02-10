@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const contactSchema = new mongoose.Schema(
   {
@@ -21,4 +22,7 @@ const contactSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+contactSchema.plugin(defaultSortPlugin);
+
 module.exports = mongoose.model('contacts', contactSchema);

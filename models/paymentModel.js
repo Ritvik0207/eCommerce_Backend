@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -22,4 +23,6 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
 });
+
+paymentSchema.plugin(defaultSortPlugin);
 module.exports = mongoose.model('payments', userSchema);

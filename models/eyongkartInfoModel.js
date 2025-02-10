@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const eyongkartInfoSchema = new mongoose.Schema(
   {
@@ -149,5 +150,7 @@ const eyongkartInfoSchema = new mongoose.Schema(
 
 // Index for better query performance
 eyongkartInfoSchema.index({ 'companyInfo.name': 1 });
+
+eyongkartInfoSchema.plugin(defaultSortPlugin);
 
 module.exports = mongoose.model('eyongkartInfo', eyongkartInfoSchema);

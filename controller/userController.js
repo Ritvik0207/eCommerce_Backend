@@ -10,7 +10,11 @@ const userModel = require('../models/user.js');
 const asyncHandler = require('express-async-handler');
 const validator = require('validator');
 const Address = require('../models/addressModel.js');
-const { ADMIN_ROLES } = require('../constants/constants.js');
+const {
+  ADMIN_ROLES,
+  COOKIE,
+  JWT_CONFIG,
+} = require('../constants/constants.js');
 const { OAuth2Client } = require('google-auth-library');
 
 // bcrypt.genSalt(10,(err,salt)=>{
@@ -219,15 +223,15 @@ const loginUser = asyncHandler(async (req, res) => {
   }
   const { password: _, ...userWithoutPassword } = userExist.toObject();
 
-  const token = jwt.sign(userWithoutPassword, process.env.JWT_SECRET, {
-    expiresIn: '7d',
+  const token = jwt.sign(userWithoutPassword, JWT_CONFIG.CUSTOMER.JWT_SECRET, {
+    expiresIn: JWT_CONFIG.CUSTOMER.JWT_EXPIRES_IN,
   });
 
-  res.cookie('jwt', token, {
-    httpOnly: true, // prevent client side js from accessing the cookie and prevent XSS attacks
-    secure: true, // only send cookie over https
-    sameSite: 'none', // allow cookie to be sent to different domains
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  res.cookie(COOKIE.CUSTOMER.COOKIE_NAME, token, {
+    httpOnly: COOKIE.CUSTOMER.HTTP_ONLY, // prevent client side js from accessing the cookie and prevent XSS attacks
+    secure: COOKIE.CUSTOMER.SECURE, // only send cookie over https
+    sameSite: COOKIE.CUSTOMER.SAME_SITE, // allow cookie to be sent to different domains
+    maxAge: COOKIE.CUSTOMER.MAX_AGE,
   });
 
   return res.json({
@@ -268,15 +272,19 @@ const googleLogin = asyncHandler(async (req, res) => {
 
   const { password: _, ...userWithoutPassword } = user.toObject();
 
-  const jwtToken = jwt.sign(userWithoutPassword, process.env.JWT_SECRET, {
-    expiresIn: '7d',
-  });
+  const jwtToken = jwt.sign(
+    userWithoutPassword,
+    JWT_CONFIG.CUSTOMER.JWT_SECRET,
+    {
+      expiresIn: JWT_CONFIG.CUSTOMER.JWT_EXPIRES_IN,
+    }
+  );
 
-  res.cookie('jwt', jwtToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+  res.cookie(COOKIE.CUSTOMER.COOKIE_NAME, jwtToken, {
+    httpOnly: COOKIE.CUSTOMER.HTTP_ONLY,
+    secure: COOKIE.CUSTOMER.SECURE,
+    sameSite: COOKIE.CUSTOMER.SAME_SITE,
+    maxAge: COOKIE.CUSTOMER.MAX_AGE,
   });
 
   return res.json({
@@ -286,10 +294,10 @@ const googleLogin = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  res.cookie('jwt', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+  res.cookie(COOKIE.CUSTOMER.COOKIE_NAME, '', {
+    httpOnly: COOKIE.CUSTOMER.HTTP_ONLY,
+    secure: COOKIE.CUSTOMER.SECURE,
+    sameSite: COOKIE.CUSTOMER.SAME_SITE,
     expires: new Date(0),
     maxAge: 0,
   });
@@ -357,6 +365,63 @@ const deleteCustomer = asyncHandler(async (req, res) => {
   });
 });
 
+const getCustomerById = asyncHandler(async (req, res) => {
+  const { customerId } = req.params;
+
+  const customer = await User.findById(customerId).select('-password');
+
+  if (!customer) {
+    res.statusCode = 404;
+    throw new Error('Customer not found');
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Customer fetched successfully',
+    data: customer,
+  });
+});
+
+const updateCustomer = asyncHandler(async (req, res) => {
+  const { customerId } = req.params;
+  const { userName, email, phone, password } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(customerId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid customer ID');
+  }
+
+  const customerToUpdate = await User.findById(customerId);
+
+  if (!customerToUpdate) {
+    res.statusCode = 404;
+    throw new Error('Customer not found');
+  }
+
+  customerToUpdate.userName = userName;
+  customerToUpdate.email = email;
+  customerToUpdate.phone = phone;
+
+  if (password) {
+    const genSalt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, genSalt);
+    customerToUpdate.password = hashedPassword;
+  }
+
+  const updatedCustomer = await customerToUpdate.save();
+
+  if (!updatedCustomer) {
+    res.statusCode = 404;
+    throw new Error('Customer not found');
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Customer updated successfully',
+    data: updatedCustomer,
+  });
+});
+
 module.exports = {
   createUser,
   getAllCustomers,
@@ -367,4 +432,6 @@ module.exports = {
   logoutUser,
   googleLogin,
   deleteCustomer,
+  getCustomerById,
+  updateCustomer,
 };

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const subCategorySchema = new mongoose.Schema(
   {
@@ -67,6 +68,8 @@ subCategorySchema.virtual('productsCount', {
   foreignField: 'subcategory',
   count: true,
 });
+
+subCategorySchema.plugin(defaultSortPlugin);
 
 const subCategoryModel = mongoose.model('subCategory', subCategorySchema);
 module.exports = subCategoryModel;

@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const priceRangeSchema = new mongoose.Schema(
   {
@@ -20,4 +21,5 @@ const priceRangeSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("pricerange", priceRangeSchema);
+priceRangeSchema.plugin(defaultSortPlugin);
+module.exports = mongoose.model('pricerange', priceRangeSchema);

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose'); // Erase if already required
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 // Declare the Schema of the Mongo model
 const AddressSchema = new mongoose.Schema({
@@ -42,6 +43,8 @@ const AddressSchema = new mongoose.Schema({
     default: false,
   },
 });
+
+AddressSchema.plugin(defaultSortPlugin);
 
 //Export the model
 module.exports = mongoose.model('Address', AddressSchema);

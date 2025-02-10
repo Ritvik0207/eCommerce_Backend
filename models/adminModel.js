@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { ADMIN_ROLES } = require('../constants/constants');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const adminSchema = new mongoose.Schema(
   {
@@ -60,6 +61,8 @@ const adminSchema = new mongoose.Schema(
 // Index for better query performance
 adminSchema.index({ email: 1 });
 adminSchema.index({ role: 1 });
+
+adminSchema.plugin(defaultSortPlugin);
 
 const Admin = mongoose.model('admin', adminSchema);
 module.exports = Admin;

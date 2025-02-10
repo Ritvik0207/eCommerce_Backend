@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const footerLinkSchema = new mongoose.Schema(
   {
@@ -14,5 +15,7 @@ const footerLinkSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+footerLinkSchema.plugin(defaultSortPlugin);
 
 module.exports = mongoose.model('footerLink', footerLinkSchema);

@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const { defaultSortPlugin } = require('../utils/mongoosePlugin');
 
 const carouselSchema = new mongoose.Schema({
   subtitle: {
@@ -19,4 +20,6 @@ const carouselSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("carousels", carouselSchema);
+carouselSchema.plugin(defaultSortPlugin);
+
+module.exports = mongoose.model('carousels', carouselSchema);
