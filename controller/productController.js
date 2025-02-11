@@ -131,7 +131,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const {
-    name, 
+    name,
     description,
     category,
     subcategory,
@@ -153,17 +153,22 @@ const updateProduct = asyncHandler(async (req, res) => {
   const falsyValues = [undefined, null, '', 'undefined', 'null'];
 
   if (
-    (!falsyValues.includes(category) && !mongoose.Types.ObjectId.isValid(category)) ||
-    (!falsyValues.includes(subcategory) && !mongoose.Types.ObjectId.isValid(subcategory)) ||
-    (!falsyValues.includes(artisan) && !mongoose.Types.ObjectId.isValid(artisan))
+    (!falsyValues.includes(category) &&
+      !mongoose.Types.ObjectId.isValid(category)) ||
+    (!falsyValues.includes(subcategory) &&
+      !mongoose.Types.ObjectId.isValid(subcategory)) ||
+    (!falsyValues.includes(artisan) &&
+      !mongoose.Types.ObjectId.isValid(artisan))
   ) {
     res.status(400);
-    throw new Error('Invalid ID provided for category, subcategory, or artisan');
+    throw new Error(
+      'Invalid ID provided for category, subcategory, or artisan'
+    );
   }
 
   // handle base image update if provided
   let baseImage = existingProduct.baseImage;
-  if (files?.baseImage && files.baseImage[0]) {
+  if (files?.baseImage?.[0]) {
     const baseImageFile = files.baseImage[0];
     const fileId = await uploadFile(baseImageFile);
     baseImage = {
@@ -194,7 +199,7 @@ const updateProduct = asyncHandler(async (req, res) => {
       new: true,
       runValidators: true,
     }
-  )
+  );
 
   // handle variants update if provided
   if (variants) {
@@ -202,11 +207,11 @@ const updateProduct = asyncHandler(async (req, res) => {
     const updatedVariants = [];
 
     // delete existing variants that are not in the new list
-    const variantIdsToKeep = variantList.filter(v => v._id).map(v => v._id);
+    const variantIdsToKeep = variantList.filter((v) => v._id).map((v) => v._id);
 
     await productVariantModel.deleteMany({
       product: id,
-      _id: { $nin: variantIdsToKeep }
+      _id: { $nin: variantIdsToKeep },
     });
 
     for (const variant of variantList) {
@@ -233,7 +238,7 @@ const updateProduct = asyncHandler(async (req, res) => {
             ...variant,
             ...(variantImages.length > 0 && { images: variantImages }),
           },
-          { new : true }
+          { new: true }
         );
         updatedVariants.push(updatedVariant);
       } else {
@@ -255,13 +260,13 @@ const updateProduct = asyncHandler(async (req, res) => {
       .populate('subcategory', 'name')
       .populate('shop')
       .populate('variants');
-    
-      res.status(200).json({
-        success: true,
-        message: 'Product and variants updated successfully',
-        product: completeProduct,
-        variants: updatedVariants
-      });
+
+    res.status(200).json({
+      success: true,
+      message: 'Product and variants updated successfully',
+      product: completeProduct,
+      variants: updatedVariants,
+    });
   } else {
     // if no variants update, just return the updated product
     const completeProduct = await productModel
@@ -275,9 +280,9 @@ const updateProduct = asyncHandler(async (req, res) => {
       success: true,
       message: 'Product updated successfully',
       product: completeProduct,
-    })
+    });
   }
-})
+});
 
 const deleteProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -292,7 +297,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
   }
 
   // delete all associated variants
-  await productVariantModel.deleteMany({ product: id })
+  await productVariantModel.deleteMany({ product: id });
 
   // delete the product
   await product.deleteOne();
@@ -402,12 +407,17 @@ const buildFuzzySearch = (searchTerm) => {
 };
 
 const buildVariantQueries = (queries) => {
+  // Example price queries:
+  // variants.price.basePrice_gte=1000&variants.price.basePrice_lte=5000 - Get variants with basePrice between 1000-5000
+  // variants.price.discountedPrice_gte=800&variants.price.discount_gte=10 - Get variants with discountedPrice >= 800 and discount >= 10%
+
   const populateQueries = {};
 
   for (const key of Object.keys(queries)) {
     if (key.includes('.')) {
       const [collection, ...pathParts] = key.split('.');
 
+      // Only process variant related queries
       if (!['variants'].includes(collection)) continue;
 
       const lastPart = pathParts[pathParts.length - 1];
@@ -416,19 +426,22 @@ const buildVariantQueries = (queries) => {
       let value = queries[key];
 
       const operators = {
-        gte: '$gte',
-        lte: '$lte',
-        gt: '$gt',
-        lt: '$lt',
-        ne: '$ne',
+        _gte: '$gte',
+        _lte: '$lte',
+        _gt: '$gt',
+        _lt: '$lt',
+        _ne: '$ne',
       };
 
+      // Check if query contains any operator
       for (const [symbol, mongoOp] of Object.entries(operators)) {
-        if (lastPart.includes(symbol)) {
-          const [baseField] = lastPart.split(symbol);
-          path[path.length - 1] = baseField.split('_')[0].trim();
+        if (lastPart.endsWith(symbol)) {
+          // Extract base field name without operator
+          const baseField = lastPart.replace(symbol, '');
+          path[path.length - 1] = baseField;
           operator = mongoOp;
 
+          // Convert numeric fields to Number type
           if (
             [
               'price.basePrice',
@@ -443,11 +456,24 @@ const buildVariantQueries = (queries) => {
         }
       }
 
+      // Initialize match object for collection if not exists
       if (!populateQueries[collection]) {
         populateQueries[collection] = { match: {} };
       }
 
-      populateQueries[collection].match[path.join('.')] = { [operator]: value };
+      const fieldPath = path.join('.');
+
+      // Handle multiple conditions for same field
+      if (populateQueries[collection].match[fieldPath]) {
+        // Merge with existing conditions
+        populateQueries[collection].match[fieldPath] = {
+          ...populateQueries[collection].match[fieldPath],
+          [operator]: value,
+        };
+      } else {
+        // Add new condition
+        populateQueries[collection].match[fieldPath] = { [operator]: value };
+      }
     }
   }
 
@@ -473,12 +499,15 @@ const getAllProducts = asyncHandler(async (req, res) => {
   // Handle variant queries
   const populateQueries = buildVariantQueries(queries);
 
+  console.log(JSON.stringify(populateQueries, null, 2));
+
   // Pagination
   const page = Number.parseInt(queries.page) || 1;
-  const limit = Number.parseInt(queries.limit) || 10;
+  const limit =
+    queries.limit === 'none' ? 0 : Number.parseInt(queries.limit) || 10;
   const skip = (page - 1) * limit;
 
-  if (page < 1 || limit < 1 || limit > 100) {
+  if (page < 1 || (limit !== 0 && (limit < 1 || limit > 100))) {
     res.status(400);
     throw new Error('Invalid pagination parameters');
   }
@@ -499,35 +528,41 @@ const getAllProducts = asyncHandler(async (req, res) => {
     productsQuery = productsQuery.populate('variants');
   }
 
-  const totalProducts = await productModel.countDocuments(queryObj);
-  const totalPages = Math.ceil(totalProducts / limit);
-
   productsQuery = productsQuery
     .populate('category')
     .populate('subcategory')
     .populate('shop')
     .sort({ _id: -1 })
-    .skip(skip)
-    .limit(limit)
     .lean({ virtuals: true });
 
   try {
-    const products = await productsQuery.exec();
+    // Get all products first to calculate correct pagination for filtered results
+    const allProducts = await productsQuery.exec();
 
+    // Apply variant filtering if needed
     const filteredProducts = populateQueries.variants
-      ? products.filter((product) => product.variants?.length > 0)
-      : products;
+      ? allProducts.filter((product) => product.variants?.length > 0)
+      : allProducts;
+
+    const totalProducts = filteredProducts.length;
+    const totalPages = limit === 0 ? 1 : Math.ceil(totalProducts / limit);
+
+    // Apply pagination to filtered results
+    const paginatedProducts =
+      limit === 0
+        ? filteredProducts
+        : filteredProducts.slice(skip, skip + limit);
 
     res.status(200).json({
       success: true,
-      products: filteredProducts,
+      products: paginatedProducts,
       pagination: {
         currentPage: page,
         totalPages,
         totalProducts,
         limit,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
+        hasNextPage: limit === 0 ? false : page < totalPages,
+        hasPrevPage: limit === 0 ? false : page > 1,
       },
     });
   } catch (error) {
@@ -585,7 +620,6 @@ const getProductById = asyncHandler(async (req, res) => {
     product,
   });
 });
-
 
 const getProductsByShopId = asyncHandler(async (req, res) => {
   const { id } = req.params;
