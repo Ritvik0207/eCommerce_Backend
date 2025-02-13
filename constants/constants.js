@@ -28,7 +28,15 @@ const GENDER = {
 
 const PAYMENT_STATUS = {
   PENDING: 'Pending',
-  SUCCESS: 'Success',
+  COMPLETED: 'Completed',
+  FAILED: 'Failed',
+  REFUNDED: 'Refunded',
+  CANCELLED: 'Cancelled',
+};
+
+const REFUND_STATUS = {
+  PENDING: 'Pending',
+  COMPLETED: 'Completed',
   FAILED: 'Failed',
 };
 
@@ -92,4 +100,5 @@ module.exports = {
   PAYMENT_TYPE,
   COOKIE,
   JWT_CONFIG,
+  REFUND_STATUS,
 };

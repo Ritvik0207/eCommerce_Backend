@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { defaultSortPlugin } = require('../utils/mongoosePlugin');
+const { PAYMENT_TYPE, PAYMENT_STATUS } = require('../constants/constants');
 
 const orderSchema = new mongoose.Schema(
   {
@@ -23,7 +24,7 @@ const orderSchema = new mongoose.Schema(
       transactionId: String,
       status: {
         type: String,
-        enum: ['Pending', 'Success', 'Failed'],
+        enum: Object.values(PAYMENT_STATUS),
         default: 'Pending',
       },
       amount: Number,
@@ -35,8 +36,13 @@ const orderSchema = new mongoose.Schema(
     },
     payment_type: {
       type: String,
-      enum: ['COD', 'Online'],
+      enum: Object.values(PAYMENT_TYPE),
       required: [true, 'Payment type is required'],
+    },
+    payment_details: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Payment',
+      autopopulate: true,
     },
     products: [
       {

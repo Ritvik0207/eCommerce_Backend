@@ -23,6 +23,6 @@ route.post('/create', authenticateAdmin, createCategory);
 route.delete('/delete/:categoryId', authenticateAdmin, deleteCategory);
 route.put('/update/:categoryId', authenticateAdmin, updateCategory);
 route.get('/categoryCount', getTotalCategoryCount);
-route.get('/get/:id', validateObjectId, getCategoryById)
+route.get('/get/:id', validateObjectId, getCategoryById);
 
 module.exports = route;

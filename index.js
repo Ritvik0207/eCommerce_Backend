@@ -23,6 +23,8 @@ const adminRoutes = require('./router/admin.routes');
 const testRoutes = require('./upload/testupload');
 const shopRoutes = require('./router/shop.routes.js');
 const eyongkartInfoRoutes = require('./router/eyongkartInfo.routes.js');
+const paymentRoutes = require('./router/payment.routes.js');
+
 const fs = require('node:fs');
 const cors = require('cors');
 const Razorpay = require('razorpay');
@@ -120,6 +122,7 @@ app.use('/productVariant', productVariantRoutes);
 app.use('/wishlist', wishlistRoutes);
 app.use('/cart', cardListRoutes);
 app.use('/order', orderProductRoutes);
+app.use('/payment', paymentRoutes);
 app.use('/carousel', carouselRoutes);
 app.use('/contact', contactRoutes);
 app.use('/subCategory', subCategoryRoutes);

@@ -11,6 +11,8 @@ const { default: mongoose } = require('mongoose');
 const userModel = require('../models/user');
 const productModel = require('../models/productModel');
 const shippingCalculator = require('../utils/shipping-calculator-class');
+const Payment = require('../models/paymentModel');
+const { generateTransactionId } = require('../utils/generateTxnId');
 
 const createOrder = asyncHandler(async (req, res) => {
   const { amount, payment, payment_type, products, shipping_address, ...rest } =
@@ -212,6 +214,23 @@ const createOrder = asyncHandler(async (req, res) => {
     },
     ...rest,
   });
+
+  const txnId = generateTransactionId(order._id);
+
+  const paymentDetails = await Payment.create({
+    order: order._id,
+    userId: user._id,
+    amount: totalAmount,
+    currency: 'INR',
+    transactionId: txnId,
+    paymentMethod: payment_type,
+    status: PAYMENT_STATUS.PENDING, // Set initial status as pending
+    paymentGateway: payment?.gateway || 'default',
+  });
+
+  order.payment_details = paymentDetails._id;
+  order.payment.transactionId = txnId;
+  await order.save();
 
   res.status(201).json({
     success: true,
@@ -426,9 +445,12 @@ const updatePaymentStatus = expressAsyncHandler(async (req, res) => {
   }
 
   if (!Object.values(PAYMENT_STATUS).includes(paymentStatus)) {
+    console.log(paymentStatus, 'paymentStatus');
     res.statusCode = 400;
     throw new Error(
-      'Invalid payment status. It should be either pending, success or failed.'
+      `Invalid payment status. It should be either ${Object.values(
+        PAYMENT_STATUS
+      ).join(', ')}`
     );
   }
 
