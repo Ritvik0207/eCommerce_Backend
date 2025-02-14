@@ -454,11 +454,24 @@ const updatePaymentStatus = expressAsyncHandler(async (req, res) => {
     );
   }
 
+  // TODO: let's remove this later since we have payment model now.
   const order = await orderModel.findByIdAndUpdate(
     orderId,
     { 'payment.status': paymentStatus },
     { new: true }
   );
+
+  // * NOTE: Let's stick to the payment model after we update the frontend.
+  const payment = await Payment.findByIdAndUpdate(
+    order.payment_details,
+    { status: paymentStatus },
+    { new: true }
+  );
+
+  if (!payment) {
+    res.statusCode = 400;
+    throw new Error('Payment not found');
+  }
 
   if (!order) {
     res.statusCode = 400;
@@ -469,6 +482,7 @@ const updatePaymentStatus = expressAsyncHandler(async (req, res) => {
     success: true,
     message: 'Order status update successfully',
     order,
+    payment,
   });
 });
 
