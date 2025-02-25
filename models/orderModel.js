@@ -20,6 +20,10 @@ const orderSchema = new mongoose.Schema(
       default: 'Pending',
       required: [true, 'Order status is required'],
     },
+    cancellation_reason: {
+      type: String,
+      trim: true,
+    },
     payment: {
       transactionId: String,
       status: {

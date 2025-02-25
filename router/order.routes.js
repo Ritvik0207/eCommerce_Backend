@@ -12,6 +12,7 @@ const {
   updatePaymentStatus,
   deleteOrderById,
   updateEstimatedDeliveryDate,
+  cancelOrder,
 } = require('../controller/orderController');
 
 const authenticateCustomer = require('../middlewares/authenticateCustomer');
@@ -60,5 +61,8 @@ router.delete('/deleteOrderById/:orderId', authenticateAdmin, deleteOrderById);
 //  get my orders
 router.get('/myOrders', authenticateCustomer, getMyOrders);
 router.get('/getOrderById/:id', authenticateCustomer, getOrderById);
+
+// Cancel order
+router.put('/cancelOrder/:orderId', authenticateCustomer, cancelOrder);
 
 module.exports = router;

@@ -586,6 +586,86 @@ const updateEstimatedDeliveryDate = expressAsyncHandler(async (req, res) => {
   });
 });
 
+const cancelOrder = expressAsyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { reason } = req.body;
+
+  if (!mongoose.isValidObjectId(orderId)) {
+    res.statusCode = 400;
+    throw new Error('Invalid order ID');
+  }
+
+  if (!reason) {
+    res.statusCode = 400;
+    throw new Error('Reason is required');
+  }
+
+  if (reason.length > 1000) {
+    res.statusCode = 400;
+    throw new Error('Reason cannot be more than 1000 characters');
+  }
+
+  // Find order and check if it exists
+  const order = await orderModel.findById(orderId);
+
+  if (!order) {
+    res.statusCode = 404;
+    throw new Error('Order not found');
+  }
+
+  if (order.status === ORDER_STATUS.CANCELLED) {
+    res.statusCode = 400;
+    throw new Error('Order is already cancelled');
+  }
+
+  if (order.status === ORDER_STATUS.SHIPPED) {
+    res.statusCode = 400;
+    throw new Error('Order is already shipped');
+  }
+
+  if (order.status === ORDER_STATUS.DELIVERED) {
+    res.statusCode = 400;
+    throw new Error('Order is already delivered');
+  }
+
+  if (
+    order.status !== ORDER_STATUS.PENDING &&
+    order.status !== ORDER_STATUS.PROCESSING
+  ) {
+    res.statusCode = 400;
+    throw new Error('Order is not pending or processing');
+  }
+
+  // Check if order is within 24 hour cancellation window
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+  const orderCreationTime = new Date(order.createdAt).getTime();
+  const currentTime = new Date().getTime();
+  const timeDifference = currentTime - orderCreationTime;
+
+  if (timeDifference > TWENTY_FOUR_HOURS) {
+    res.statusCode = 400;
+    throw new Error('Order cannot be cancelled after 24 hours');
+  }
+
+  // TODO: refund the amount when we have online payment
+  // const refund = await refundModel.create({
+  //   order: order._id,
+  //   amount: order.amount,
+  //   status: REFUND_STATUS.PENDING,
+  // });
+
+  order.status = ORDER_STATUS.CANCELLED;
+  order.cancellation_reason = reason;
+
+  await order.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Order cancelled successfully',
+    order,
+  });
+});
+
 module.exports = {
   createOrder,
   getOrder,
@@ -599,4 +679,5 @@ module.exports = {
   updatePaymentStatus,
   deleteOrderById,
   updateEstimatedDeliveryDate,
+  cancelOrder,
 };
